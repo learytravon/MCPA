@@ -1,0 +1,17 @@
+{
+  "name": "MCPA",
+  "short_name": "MCPA",
+  "description": "MCPA mobile league operations for seasons, tournaments, stats, payments, roles, and community rooms.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#101010",
+  "theme_color": "#161616",
+  "icons": [
+    {
+      "src": "./assets/mcpa-logo-square.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#161616" />
+    <title>MCPA</title>
+    <link rel="manifest" href="./manifest.webmanifest?v=mcpa-position-leaders" />
+    <link rel="icon" href="./assets/mcpa-logo-square.png" type="image/png" />
+    <link rel="apple-touch-icon" href="./assets/mcpa-logo-square.png" />
+    <link rel="stylesheet" href="./styles.css?v=mcpa-position-leaders" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="MCPA mobile app prototype">
+      <header class="topbar">
+        <button class="icon-button" type="button" title="League switcher" aria-label="League switcher">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div class="brand-lockup">
+          <img src="./assets/mcpa-logo-square.png" alt="MCPA logo" />
+          <div>
+            <p class="eyebrow">MCPA</p>
+            <h1>Summer Rec League</h1>
+          </div>
+        </div>
+        <button class="avatar-button" type="button" title="Commissioner profile" aria-label="Commissioner profile">TL</button>
+      </header>
+
+      <section class="screen active" id="screen-home" aria-labelledby="home-title">
+        <div class="hero-panel">
+          <div>
+            <p class="eyebrow">Tonight</p>
+            <h2 id="home-title">Week 4 lock-in</h2>
+            <p class="hero-copy">8 games, 3 unpaid entries, 2 stat sheets waiting for review.</p>
+          </div>
+          <div class="court-art" aria-label="Basketball court lineup visual">
+            <svg viewBox="0 0 260 170" role="img">
+              <rect x="7" y="7" width="246" height="156" rx="16" />
+              <path d="M18 85h224M130 8v154M59 45h58v80H59zM143 45h58v80h-58z" />
+              <path d="M88 63a22 22 0 0 1 0 44M172 63a22 22 0 0 0 0 44" />
+              <circle cx="130" cy="85" r="23" />
+              <circle cx="52" cy="85" r="8" />
+              <circle cx="208" cy="85" r="8" />
+            </svg>
+            <span class="pin pin-a">PG</span>
+            <span class="pin pin-b">C</span>
+            <span class="pin pin-c">SG</span>
+          </div>
+        </div>
+
+        <div class="league-logo-card">
+          <img src="./assets/mcpa-logo-wide.png" alt="MCPA 2K League logo" />
+          <div>
+            <strong>MCPA 2K League</strong>
+            <small>Main league branding is now loaded into the app.</small>
+          </div>
+        </div>
+
+        <div class="quick-grid" aria-label="League summary">
+          <article>
+            <span>Teams</span>
+            <strong>16</strong>
+            <small>4 divisions</small>
+          </article>
+          <article>
+            <span>Revenue</span>
+            <strong>$4.8K</strong>
+            <small>92% collected</small>
+          </article>
+          <article>
+            <span>Staff Roles</span>
+            <strong>6</strong>
+            <small>active permissions</small>
+          </article>
+          <article>
+            <span>Fines</span>
+            <strong>$175</strong>
+            <small>open balance</small>
+          </article>
+        </div>
+
+        <div class="section-heading">
+          <h2>Commissioner Queue</h2>
+          <button class="text-button" type="button" data-tab-target="scan">Review stats</button>
+        </div>
+        <div class="task-list">
+          <button class="task-card" type="button" data-tab-target="payments">
+            <span class="status-dot warn"></span>
+            <div>
+              <strong>3 registration payments pending</strong>
+              <small>Auto-reminders scheduled for 6:00 PM</small>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+          <button class="task-card" type="button" data-tab-target="tournaments">
+            <span class="status-dot live"></span>
+            <div>
+              <strong>Midnight Madness bracket ready</strong>
+              <small>12 teams registered, 4 slots open</small>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+          <button class="task-card" type="button" data-tab-target="league">
+            <span class="status-dot schedule"></span>
+            <div>
+              <strong>6 scheduled games this week</strong>
+              <small>3 published, 2 check-ins open, 1 court pending</small>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+          <button class="task-card" type="button" data-tab-target="chat">
+            <span class="status-dot voice"></span>
+            <div>
+              <strong>3 players live on Twitch</strong>
+              <small>Discord roles synced for team chats</small>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+          <button class="task-card" type="button" data-tab-target="admin">
+            <span class="status-dot admin"></span>
+            <div>
+              <strong>Staff access review</strong>
+              <small>2 role requests and 1 team-owner action pending</small>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+          <button class="task-card" type="button" data-tab-target="awards">
+            <span class="status-dot award"></span>
+            <div>
+              <strong>Award and All-Star polls open</strong>
+              <small>One vote per user, live totals visible until close</small>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-league" aria-labelledby="league-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Season Control</p>
+            <h2 id="league-title">Standings & Schedule</h2>
+          </div>
+          <button class="icon-button dark" type="button" title="Create game" aria-label="Create game">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+        </div>
+
+        <div class="standings-kpis" aria-label="Standings summary">
+          <article>
+            <span>Top seed</span>
+            <strong id="topSeedName">North City Elite</strong>
+            <small id="topSeedRecord">8-1 · .889</small>
+          </article>
+          <article>
+            <span>Playoff line</span>
+            <strong id="playoffLine">8 seed</strong>
+            <small>Top 8 make playoffs</small>
+          </article>
+        </div>
+
+        <div class="standings-tabs" role="tablist" aria-label="Team standings filters">
+          <button class="mini-tab active" type="button" data-standings-filter="all">All</button>
+          <button class="mini-tab" type="button" data-standings-filter="metro">Metro</button>
+          <button class="mini-tab" type="button" data-standings-filter="coastal">Coastal</button>
+          <button class="mini-tab" type="button" data-standings-filter="playoff">Playoff</button>
+        </div>
+
+        <div class="standings-table-wrap">
+          <table class="standings-table" aria-label="MCPA team standings">
+            <thead>
+              <tr>
+                <th>Seed</th>
+                <th>Team</th>
+                <th>W</th>
+                <th>L</th>
+                <th>PCT</th>
+                <th>GB</th>
+                <th>Home</th>
+                <th>Away</th>
+                <th>L10</th>
+                <th>Strk</th>
+                <th>Diff</th>
+              </tr>
+            </thead>
+            <tbody id="teamStandings"></tbody>
+          </table>
+        </div>
+
+        <div class="playoff-note">
+          <span class="seed-dot clinched"></span><strong>1-6</strong><small>Playoff position</small>
+          <span class="seed-dot bubble"></span><strong>7-8</strong><small>Playoff bubble</small>
+        </div>
+
+        <div class="section-heading compact">
+          <h2>Scheduled Games</h2>
+          <button class="text-button" id="publishSchedule" type="button">Publish</button>
+        </div>
+
+        <div class="schedule-filter" role="tablist" aria-label="Scheduled game filters">
+          <button class="mini-tab active" type="button" data-schedule-filter="all">All</button>
+          <button class="mini-tab" type="button" data-schedule-filter="today">Today</button>
+          <button class="mini-tab" type="button" data-schedule-filter="week">Week</button>
+          <button class="mini-tab" type="button" data-schedule-filter="tournament">Events</button>
+        </div>
+
+        <div class="schedule-stack" id="scheduledGames"></div>
+
+        <div class="host-panel schedule-form">
+          <h2>Schedule Game</h2>
+          <label>
+            Home team
+            <input id="scheduleHome" type="text" value="North City Elite" />
+          </label>
+          <label>
+            Away team
+            <input id="scheduleAway" type="text" value="Park Kings" />
+          </label>
+          <div class="split-fields">
+            <label>
+              Date and time
+              <input id="scheduleTime" type="text" value="Saturday · 7:30 PM" />
+            </label>
+            <label>
+              Court
+              <input id="scheduleCourt" type="text" value="Rec Center B" />
+            </label>
+          </div>
+          <button class="solid-button full" id="addScheduledGame" type="button">Add scheduled game</button>
+        </div>
+
+        <div class="rules-panel">
+          <h2>Rule Enforcement</h2>
+          <div class="rule-grid">
+            <span>Late check-in</span><strong>$15</strong>
+            <span>Quit before final</span><strong>$40</strong>
+            <span>Roster lock violation</span><strong>$25</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-tournaments" aria-labelledby="tournaments-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Auto Host</p>
+            <h2 id="tournaments-title">Tournaments</h2>
+          </div>
+          <button class="primary-icon" type="button" id="shuffleSeeds" title="Auto seed bracket" aria-label="Auto seed bracket">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 4 4-4 4M4 7h16M8 21l-4-4 4-4M20 17H4" /></svg>
+          </button>
+        </div>
+
+        <article class="event-card">
+          <div class="event-top">
+            <div>
+              <span class="pill">Open registration</span>
+              <h2>Midnight Madness</h2>
+              <p>Single elimination · 16 teams · $75 entry</p>
+            </div>
+            <strong>12/16</strong>
+          </div>
+          <div class="meter" aria-label="12 of 16 teams registered"><span style="width: 75%"></span></div>
+          <div class="event-actions">
+            <button class="solid-button" type="button">Open checkout</button>
+            <button class="ghost-button" type="button">Invite teams</button>
+          </div>
+        </article>
+
+        <div class="bracket" id="bracket">
+          <article><span>1</span><strong>North City Elite</strong><small>Bye</small></article>
+          <article><span>8</span><strong>Southside Splash</strong><small>vs West End</small></article>
+          <article><span>4</span><strong>Rim Breakers</strong><small>vs Park Kings</small></article>
+          <article><span>5</span><strong>Hillwood Hoopers</strong><small>vs Midtown</small></article>
+        </div>
+
+        <div class="host-panel">
+          <h2>Create Tournament</h2>
+          <label>
+            Name
+            <input type="text" value="Weekend Rec Classic" />
+          </label>
+          <div class="split-fields">
+            <label>
+              Entry
+              <input type="text" value="$50" />
+            </label>
+            <label>
+              Teams
+              <input type="text" value="8" />
+            </label>
+          </div>
+          <button class="solid-button full" type="button">Generate registration page</button>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-awards" aria-labelledby="awards-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Accolades</p>
+            <h2 id="awards-title">Awards & Voting</h2>
+          </div>
+          <span class="sync-badge">Live polls</span>
+        </div>
+
+        <div class="awards-hero">
+          <img src="./assets/mcpa-logo-square.png" alt="MCPA logo" />
+          <div>
+            <strong>Season honors, All-Star voting, and league history</strong>
+            <small>Players can track where polls stand until voting closes.</small>
+          </div>
+        </div>
+
+        <div class="quick-grid compact-grid" aria-label="Award summary">
+          <article>
+            <span>Open Polls</span>
+            <strong>14</strong>
+            <small>season and All-Star</small>
+          </article>
+          <article>
+            <span>History</span>
+            <strong>32</strong>
+            <small>saved accolades</small>
+          </article>
+          <article>
+            <span>Champions</span>
+            <strong>5</strong>
+            <small>season records</small>
+          </article>
+          <article>
+            <span>Tournaments</span>
+            <strong>9</strong>
+            <small>winners archived</small>
+          </article>
+        </div>
+
+        <div class="tabs awards-tabs" role="tablist" aria-label="Awards sections">
+          <button class="mini-tab active" type="button" data-awards-tab="seasonAwards">Awards</button>
+          <button class="mini-tab" type="button" data-awards-tab="allStarAwards">All-Star</button>
+          <button class="mini-tab" type="button" data-awards-tab="awardHistory">History</button>
+        </div>
+
+        <div class="awards-panel active" id="seasonAwards">
+          <div class="award-source-note">
+            <strong>NBA-style award set</strong>
+            <small>Includes MVP, Defensive Player, Rookie, Most Improved, Sixth Man, Clutch, Hustle, Sportsmanship, Teammate, Social Justice, Coach, Executive, Finals MVP, and all-league teams.</small>
+          </div>
+          <div class="award-catalog" id="awardCatalog"></div>
+          <div class="award-poll-list" id="awardPolls"></div>
+        </div>
+
+        <div class="awards-panel" id="allStarAwards">
+          <div class="award-source-note">
+            <strong>All-Star voting</strong>
+            <small>Each user gets one vote per ballot. Results remain visible until the poll closes.</small>
+          </div>
+          <div class="award-poll-list" id="allStarPolls"></div>
+        </div>
+
+        <div class="awards-panel" id="awardHistory">
+          <div class="history-filter">
+            <button class="mini-tab active" type="button" data-history-filter="all">All</button>
+            <button class="mini-tab" type="button" data-history-filter="award">Awards</button>
+            <button class="mini-tab" type="button" data-history-filter="champion">Champions</button>
+            <button class="mini-tab" type="button" data-history-filter="tournament">Tournaments</button>
+          </div>
+          <div class="history-list" id="historyList"></div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-players" aria-labelledby="players-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Profiles</p>
+            <h2 id="players-title">Players</h2>
+          </div>
+          <button class="icon-button dark" type="button" title="Add player" aria-label="Add player">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6" /></svg>
+          </button>
+        </div>
+
+        <div class="stats-leaders-panel">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">League Leaders</p>
+              <h2>Stats Leaders</h2>
+            </div>
+            <span class="sync-badge">Season</span>
+          </div>
+          <div class="leader-tabs" role="tablist" aria-label="Stat leader categories">
+            <button class="mini-tab active" type="button" data-leader-stat="ppg">PTS</button>
+            <button class="mini-tab" type="button" data-leader-stat="rpg">REB</button>
+            <button class="mini-tab" type="button" data-leader-stat="apg">AST</button>
+            <button class="mini-tab" type="button" data-leader-stat="spg">STL</button>
+            <button class="mini-tab" type="button" data-leader-stat="bpg">BLK</button>
+            <button class="mini-tab" type="button" data-leader-stat="fgValue">FG%</button>
+            <button class="mini-tab" type="button" data-leader-stat="threeValue">3PT%</button>
+          </div>
+          <div class="position-tabs" role="tablist" aria-label="Stat leader positions">
+            <button class="mini-tab active" type="button" data-leader-position="all">All</button>
+            <button class="mini-tab" type="button" data-leader-position="PG">PG</button>
+            <button class="mini-tab" type="button" data-leader-position="SG">SG</button>
+            <button class="mini-tab" type="button" data-leader-position="SF">SF</button>
+            <button class="mini-tab" type="button" data-leader-position="PF">PF</button>
+            <button class="mini-tab" type="button" data-leader-position="C">C</button>
+          </div>
+          <div class="leader-list" id="statLeaders"></div>
+        </div>
+
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+          <input type="search" id="playerSearch" placeholder="Search player, gamertag, team" />
+        </label>
+        <div class="player-list" id="playerList"></div>
+      </section>
+
+      <section class="screen" id="screen-scan" aria-labelledby="scan-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Final Score Input</p>
+            <h2 id="scan-title">Stat Reader</h2>
+          </div>
+          <span class="sync-badge">Review mode</span>
+        </div>
+
+        <figure class="score-example">
+          <img src="./sample-final-score.svg?v=mcpa-logo" alt="Example final score screenshot submitted for stat review" />
+          <figcaption>Example of the final score screenshot players submit after a game.</figcaption>
+        </figure>
+
+        <label class="upload-card" for="statImage">
+          <input id="statImage" type="file" accept="image/*" />
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
+          <strong>Add final score screenshot</strong>
+          <small>OCR intake, stat matching, and standings update</small>
+        </label>
+
+        <div class="preview-card hidden" id="previewCard">
+          <img id="imagePreview" alt="Uploaded stat screenshot preview" />
+        </div>
+
+        <div class="pipeline">
+          <article class="done"><span></span><div><strong>Read image</strong><small>Scoreboard detected</small></div></article>
+          <article class="done"><span></span><div><strong>Match roster</strong><small>Gamertags linked</small></div></article>
+          <article><span></span><div><strong>Commissioner approval</strong><small>Waiting to publish</small></div></article>
+        </div>
+
+        <div class="stat-table">
+          <div class="table-head">
+            <span>Player</span><span>PTS</span><span>REB</span><span>AST</span>
+          </div>
+          <div><span>DreLock</span><strong>31</strong><strong>6</strong><strong>9</strong></div>
+          <div><span>JCity</span><strong>24</strong><strong>3</strong><strong>11</strong></div>
+          <div><span>MaskOn</span><strong>19</strong><strong>12</strong><strong>4</strong></div>
+        </div>
+        <button class="solid-button full" id="applyStats" type="button">Apply stats and update records</button>
+      </section>
+
+      <section class="screen" id="screen-payments" aria-labelledby="payments-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Money</p>
+            <h2 id="payments-title">Payments & Fines</h2>
+          </div>
+          <button class="primary-icon" type="button" title="New charge" aria-label="New charge">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+        </div>
+
+        <div class="balance-card">
+          <span>Collected this season</span>
+          <strong>$4,825</strong>
+          <div class="balance-row">
+            <small>$375 pending</small>
+            <small>$175 fines open</small>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Payment sections">
+          <button class="mini-tab active" type="button" data-money-tab="registrations">Registrations</button>
+          <button class="mini-tab" type="button" data-money-tab="fines">Fines</button>
+        </div>
+
+        <div class="money-list active" id="registrations">
+          <article>
+            <div><strong>Hillwood Hoopers</strong><small>Team entry · Midnight Madness</small></div>
+            <span class="due">$75 due</span>
+          </article>
+          <article>
+            <div><strong>Park Kings</strong><small>Season dues · Week 4</small></div>
+            <span class="paid">Paid</span>
+          </article>
+          <article>
+            <div><strong>West End Warriors</strong><small>Late registration</small></div>
+            <span class="due">$125 due</span>
+          </article>
+        </div>
+
+        <div class="money-list" id="fines">
+          <article>
+            <div><strong>Southside Splash</strong><small>Quit before final · Game #42</small></div>
+            <span class="due">$40</span>
+          </article>
+          <article>
+            <div><strong>Rim Breakers</strong><small>Roster lock violation</small></div>
+            <span class="due">$25</span>
+          </article>
+          <article>
+            <div><strong>North City Elite</strong><small>Paid late check-in fine</small></div>
+            <span class="paid">Paid</span>
+          </article>
+        </div>
+
+        <div class="host-panel">
+          <h2>Issue Fine</h2>
+          <label>
+            Team or player
+            <input type="text" value="Southside Splash" />
+          </label>
+          <div class="split-fields">
+            <label>
+              Rule
+              <input type="text" value="Late check-in" />
+            </label>
+            <label>
+              Amount
+              <input type="text" value="$15" />
+            </label>
+          </div>
+          <button class="solid-button full" type="button">Send fine notice</button>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-admin" aria-labelledby="admin-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Limited Access</p>
+            <h2 id="admin-title">Admin Side</h2>
+          </div>
+          <span class="sync-badge">Staff only</span>
+        </div>
+
+        <div class="access-banner">
+          <div class="league-logo-preview" id="leagueLogoPreview">
+            <img src="./assets/mcpa-logo-square.png" alt="MCPA logo" />
+          </div>
+          <div>
+            <strong>Role-gated league controls</strong>
+            <small>Only approved staff can manage league settings, payments, disputes, and stat approvals.</small>
+          </div>
+        </div>
+
+        <div class="role-grid">
+          <article>
+            <span>Commissioner</span>
+            <strong>Full control</strong>
+            <small>Assign staff, approve roles, publish seasons</small>
+          </article>
+          <article>
+            <span>Staff Moderator</span>
+            <strong>Review queue</strong>
+            <small>Score images, chats, disputes</small>
+          </article>
+          <article>
+            <span>Treasurer</span>
+            <strong>Money tools</strong>
+            <small>Registration, fines, refunds</small>
+          </article>
+          <article>
+            <span>Team Owner</span>
+            <strong>Team tools</strong>
+            <small>Roster, team logo, team chat access</small>
+          </article>
+        </div>
+
+        <div class="host-panel">
+          <h2>Brand Assets</h2>
+          <label class="asset-upload" for="leagueLogoUpload">
+            League logo
+            <input id="leagueLogoUpload" type="file" accept="image/*" />
+          </label>
+          <label class="asset-upload" for="teamLogoUpload">
+            North City team logo
+            <input id="teamLogoUpload" type="file" accept="image/*" />
+          </label>
+        </div>
+
+        <div class="section-heading compact">
+          <h2>Staff Access</h2>
+          <button class="text-button" type="button" id="grantStaffRole">Grant role</button>
+        </div>
+        <div class="staff-list">
+          <article>
+            <div><strong>Travis L.</strong><small>Commissioner · all permissions</small></div>
+            <span class="paid">Owner</span>
+          </article>
+          <article>
+            <div><strong>Mia Carter</strong><small>Staff Moderator · score approvals, chat reports</small></div>
+            <span class="sync-badge">Active</span>
+          </article>
+          <article>
+            <div><strong>Jay Banks</strong><small>Treasurer · payments, fines, refunds</small></div>
+            <span class="sync-badge">Active</span>
+          </article>
+        </div>
+
+        <div class="host-panel team-owner-panel">
+          <div class="owner-top">
+            <div>
+              <p class="eyebrow">Team Owner Console</p>
+              <h2>North City Elite</h2>
+              <small>Owner role: manage logo, add players, grant team chat access.</small>
+            </div>
+            <div class="team-mark lime" id="northCityLogo">NC</div>
+          </div>
+
+          <div class="roster-meter">
+            <div>
+              <span>Roster limit</span>
+              <strong><b id="rosterCount">6</b>/8</strong>
+            </div>
+            <div class="meter" aria-label="6 of 8 roster slots used"><span id="rosterMeter" style="width: 75%"></span></div>
+            <small>Two open slots remain. Adding a ninth player is blocked.</small>
+          </div>
+
+          <div class="roster-list" id="rosterList">
+            <article><span class="player-avatar lime">DL</span><div><strong>DreLock</strong><small>Team Owner · team chat, roster, logo</small></div><span class="paid">Owner</span></article>
+            <article><span class="player-avatar teal">JC</span><div><strong>JCity</strong><small>Captain · team chat, lineup posts</small></div><span class="sync-badge">Captain</span></article>
+            <article><span class="player-avatar orange">MO</span><div><strong>MaskOn</strong><small>Player · team chat</small></div><span class="sync-badge">Player</span></article>
+          </div>
+
+          <label>
+            Add player gamertag
+            <input id="newRosterPlayer" type="text" placeholder="Enter gamertag" />
+          </label>
+          <div class="payment-choice" role="group" aria-label="Roster addition payment choice">
+            <button class="mini-tab active" type="button" data-pay-choice="owner">Owner pays $10</button>
+            <button class="mini-tab" type="button" data-pay-choice="player">Player pays $10</button>
+          </div>
+          <button class="solid-button full" id="addRosterPlayer" type="button">Add player and grant team chat</button>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-chat" aria-labelledby="chat-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Community</p>
+            <h2 id="chat-title">Chats, Voice & Streams</h2>
+          </div>
+          <button class="icon-button dark" type="button" title="Start room" aria-label="Start room">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10M8 7l4-4 4 4M4 14v3a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-3" /></svg>
+          </button>
+        </div>
+
+        <div class="connection-grid" aria-label="Connected platforms">
+          <article class="connection-card discord">
+            <div>
+              <span class="platform-icon">D</span>
+              <div>
+                <strong>Discord</strong>
+                <small>Roles synced · team chats unlocked</small>
+              </div>
+            </div>
+            <button class="ghost-button" id="connectDiscord" type="button">Connect</button>
+          </article>
+          <article class="connection-card twitch">
+            <div>
+              <span class="platform-icon">T</span>
+              <div>
+                <strong>Twitch</strong>
+                <small>Live status, channel cards, viewer counts</small>
+              </div>
+            </div>
+            <button class="ghost-button" id="connectTwitch" type="button">Connect</button>
+          </article>
+        </div>
+
+        <div class="section-heading compact">
+          <h2>Live Player Streams</h2>
+          <button class="text-button" id="refreshStreams" type="button">Refresh</button>
+        </div>
+        <div class="stream-list" id="liveStreams"></div>
+
+        <div class="room-list">
+          <button class="room-card active" type="button">
+            <span class="status-dot live"></span>
+            <div><strong>Community Lobby</strong><small>128 members · 7 online</small></div>
+          </button>
+          <button class="room-card" type="button">
+            <span class="status-dot voice"></span>
+            <div><strong>Captains Voice</strong><small>5 speaking now</small></div>
+          </button>
+          <button class="room-card" type="button">
+            <span class="status-dot warn"></span>
+            <div><strong>North City Team</strong><small>Private team chat · owner-granted roles only</small></div>
+          </button>
+          <button class="room-card locked" type="button">
+            <span class="status-dot muted"></span>
+            <div><strong>Rim Breakers Team</strong><small>Locked · ask team owner for access</small></div>
+          </button>
+        </div>
+
+        <div class="voice-stage">
+          <div>
+            <span class="pulse"></span>
+            <strong>Captains Voice</strong>
+            <small>Live room · push to talk</small>
+          </div>
+          <button class="solid-button" type="button">Join</button>
+        </div>
+
+        <div class="chat-window" id="chatWindow">
+          <article class="message">
+            <span>Commish</span>
+            <p>Week 4 games lock at 7:45. Captains, confirm your five.</p>
+          </article>
+          <article class="message mine">
+            <span>North City</span>
+            <p>Roster is confirmed. Screenshot after Game 1.</p>
+          </article>
+          <article class="message">
+            <span>Rim Breakers</span>
+            <p>Can we move Court 2 back fifteen minutes?</p>
+          </article>
+        </div>
+        <form class="composer" id="composer">
+          <input type="text" id="chatInput" placeholder="Message the league" />
+          <button class="primary-icon" type="submit" title="Send message" aria-label="Send message">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z" /></svg>
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="nav-item active" type="button" data-tab="home" aria-label="Home">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z" /></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="league" aria-label="League">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16V9M12 16V5M16 16v-4" /></svg>
+        <span>League</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="tournaments" aria-label="Tournaments">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM5 5H3v2a4 4 0 0 0 4 4M19 5h2v2a4 4 0 0 1-4 4" /></svg>
+        <span>Events</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="players" aria-label="Players">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+        <span>Players</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="awards" aria-label="Awards">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10l-1 7a4 4 0 0 1-8 0zM9 8h6M5 5H3v3a4 4 0 0 0 4 4M19 5h2v3a4 4 0 0 1-4 4" /></svg>
+        <span>Awards</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="scan" aria-label="Scan stats">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 12h10M9 9h6M9 15h4" /></svg>
+        <span>Scan</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="payments" aria-label="Payments">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4zM4 10h16M8 15h3" /></svg>
+        <span>Money</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="admin" aria-label="Admin">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 7v5c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V7zM9 12l2 2 4-5" /></svg>
+        <span>Admin</span>
+      </button>
+      <button class="nav-item" type="button" data-tab="chat" aria-label="Chat">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>
+        <span>Chat</span>
+      </button>
+    </nav>
+
+    <dialog class="player-modal" id="playerModal">
+      <button class="icon-button close-modal" type="button" title="Close profile" aria-label="Close profile">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+      </button>
+      <div id="modalContent"></div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="./app.js?v=mcpa-position-leaders"></script>
+  </body>
+</html>
