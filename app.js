@@ -2,25 +2,53 @@ const tabs = document.querySelectorAll("[data-tab]");
 const screens = document.querySelectorAll(".screen");
 const shortcutButtons = document.querySelectorAll("[data-tab-target]");
 const toast = document.querySelector("#toast");
-const teamLogos = {
-  "North City Elite": { text: "NC", color: "lime", image: "" },
-  "Hillwood Hoopers": { text: "HW", color: "teal", image: "" },
-  "Rim Breakers": { text: "RB", color: "orange", image: "" },
-  "Southside Splash": { text: "SS", color: "red", image: "" },
-  "West End Warriors": { text: "WE", color: "lime", image: "" },
-  "Park Kings": { text: "PK", color: "teal", image: "" },
-  Midtown: { text: "MT", color: "orange", image: "" },
-  "Court Vision": { text: "CV", color: "red", image: "" },
-  "Downtown Dynasty": { text: "DD", color: "lime", image: "" },
-  "Uptown United": { text: "UU", color: "teal", image: "" },
+const loginScreen = document.querySelector("#loginScreen");
+const appShell = document.querySelector(".app-shell");
+const bottomNav = document.querySelector(".bottom-nav");
+const avatarButton = document.querySelector(".avatar-button");
+const menuToggle = document.querySelector("#menuToggle");
+const sideMenu = document.querySelector("#sideMenu");
+const menuBackdrop = document.querySelector("#menuBackdrop");
+const menuClose = document.querySelector("#menuClose");
+const profileModal = document.querySelector("#profileModal");
+const enterAppButton = document.querySelector("#enterApp");
+const signOutButton = document.querySelector("#signOutButton");
+const accountState = {
+  platform: null,
+  discord: false,
+  twitch: false,
+  role: "player",
+  signedIn: false,
 };
+const officialTeams = [
+  { name: "Shockers", short: "SHK", color: "red", division: "east", image: "./assets/team-shockers.png" },
+  { name: "Sharks", short: "SHA", color: "teal", division: "east", image: "./assets/team-sharks.png" },
+  { name: "Rage", short: "RGE", color: "orange", division: "east", image: "./assets/team-rage.png" },
+  { name: "Pride", short: "PRD", color: "red", division: "east", image: "./assets/team-pride.png" },
+  { name: "Kings", short: "KNG", color: "orange", division: "east", image: "./assets/team-kings.png" },
+  { name: "Huskies", short: "HUS", color: "lime", division: "east", image: "./assets/team-huskies.png" },
+  { name: "Hoyas", short: "HOY", color: "teal", division: "west", image: "./assets/team-hoyas.png" },
+  { name: "Fusion", short: "FUS", color: "teal", division: "west", image: "./assets/team-fusion.png" },
+  { name: "Wave", short: "WAV", color: "teal", division: "west", image: "./assets/team-wave.png" },
+  { name: "Energy", short: "NRG", color: "orange", division: "west", image: "./assets/team-energy.png" },
+  { name: "Dragons", short: "DRG", color: "red", division: "west", image: "./assets/team-dragons.png" },
+  { name: "Crush", short: "CRU", color: "orange", division: "west", image: "./assets/team-crush.png" },
+];
+const teamLogos = Object.fromEntries(
+  officialTeams.map((team) => [team.name, { text: team.short, color: team.color, image: team.image }]),
+);
 
 const players = [
   {
     name: "DreLock",
     tag: "DreLock#204",
-    team: "North City Elite",
+    team: "Shockers",
     position: "PG",
+    platform: "Xbox",
+    accountAge: "6 years",
+    trustScore: 98,
+    identityStatus: "Verified",
+    identityNote: "Console ID locked with no duplicate matches",
     build: "6'6 Shot-Creating Guard",
     initials: "DL",
     color: "lime",
@@ -41,13 +69,18 @@ const players = [
     twitch: "drelock2k",
     isLive: true,
     viewers: 184,
-    streamTitle: "MCPA Week 4 - North City ranked run",
+    streamTitle: "MCPA Week 4 - Shockers ranked run",
   },
   {
     name: "JCity",
     tag: "JCityLive",
-    team: "Hillwood Hoopers",
+    team: "Sharks",
     position: "SG",
+    platform: "PSN",
+    accountAge: "5 years",
+    trustScore: 95,
+    identityStatus: "Verified",
+    identityNote: "PSN profile, Discord, and payment profile match",
     build: "Two-Way Playmaker",
     initials: "JC",
     color: "teal",
@@ -68,13 +101,18 @@ const players = [
     twitch: "jcitylive",
     isLive: true,
     viewers: 96,
-    streamTitle: "Hillwood Hoopers pregame lobby",
+    streamTitle: "Sharks pregame lobby",
   },
   {
     name: "MaskOn",
     tag: "MaskOnPF",
-    team: "Rim Breakers",
+    team: "Rage",
     position: "C",
+    platform: "Xbox",
+    accountAge: "4 years",
+    trustScore: 91,
+    identityStatus: "Verified",
+    identityNote: "Returning account with clean roster history",
     build: "Glass-Cleaning Finisher",
     initials: "MO",
     color: "orange",
@@ -100,8 +138,13 @@ const players = [
   {
     name: "SplashMia",
     tag: "SplashMia2K",
-    team: "Southside Splash",
+    team: "Pride",
     position: "SF",
+    platform: "PSN",
+    accountAge: "3 years",
+    trustScore: 89,
+    identityStatus: "Verified",
+    identityNote: "Platform identity cleared before team chat access",
     build: "Perimeter Lockdown",
     initials: "SM",
     color: "red",
@@ -122,13 +165,18 @@ const players = [
     twitch: "splashmia2k",
     isLive: true,
     viewers: 61,
-    streamTitle: "Clutch guard lab - Southside scrims",
+    streamTitle: "Clutch guard lab - Pride scrims",
   },
   {
     name: "KashFive",
     tag: "KashFive",
-    team: "West End Warriors",
+    team: "Kings",
     position: "PF",
+    platform: "Xbox",
+    accountAge: "11 months",
+    trustScore: 74,
+    identityStatus: "Watchlist",
+    identityNote: "Newer account, no duplicate identity match yet",
     build: "Inside-Out Scorer",
     initials: "KF",
     color: "lime",
@@ -166,6 +214,33 @@ const leaderStats = {
 let activeLeaderStat = "ppg";
 let activeLeaderPosition = "all";
 
+const identityReviews = [
+  {
+    name: "QuickIso23",
+    platform: "Xbox",
+    risk: "High",
+    score: 38,
+    issue: "New account matches a blocked payment profile and two device patterns.",
+    action: "Roster and team chat held",
+  },
+  {
+    name: "GreenWindow",
+    platform: "PSN",
+    risk: "Medium",
+    score: 62,
+    issue: "Brand-new PSN profile with same IP range as an active player.",
+    action: "Staff verification needed",
+  },
+  {
+    name: "DreLock",
+    platform: "Xbox",
+    risk: "Low",
+    score: 98,
+    issue: "Trusted owner account with long console history.",
+    action: "Cleared",
+  },
+];
+
 const awardCatalog = [
   "Most Valuable Player",
   "Defensive Player of the Year",
@@ -196,9 +271,9 @@ const awardPolls = [
     close: "Poll closes Week 8, Sunday 9:00 PM",
     voters: "Players, owners, and approved staff",
     options: [
-      { name: "DreLock", team: "North City Elite", stat: "28.4 PPG · 9.1 APG", votes: 42 },
-      { name: "JCity", team: "Hillwood Hoopers", stat: "23.7 PPG · 11.4 APG", votes: 31 },
-      { name: "MaskOn", team: "Rim Breakers", stat: "13.2 RPG · 67 FG%", votes: 18 },
+      { name: "DreLock", team: "Shockers", stat: "28.4 PPG · 9.1 APG", votes: 42 },
+      { name: "JCity", team: "Sharks", stat: "23.7 PPG · 11.4 APG", votes: 31 },
+      { name: "MaskOn", team: "Rage", stat: "13.2 RPG · 67 FG%", votes: 18 },
     ],
   },
   {
@@ -207,9 +282,9 @@ const awardPolls = [
     close: "Poll closes Week 8, Sunday 9:00 PM",
     voters: "Players and approved staff",
     options: [
-      { name: "MaskOn", team: "Rim Breakers", stat: "2.8 STL · 2.1 BLK", votes: 39 },
-      { name: "SplashMia", team: "Southside Splash", stat: "Perimeter lock · 5.2 RPG", votes: 28 },
-      { name: "DreLock", team: "North City Elite", stat: "1.9 STL · +142 diff", votes: 17 },
+      { name: "MaskOn", team: "Rage", stat: "2.8 STL · 2.1 BLK", votes: 39 },
+      { name: "SplashMia", team: "Pride", stat: "Perimeter lock · 5.2 RPG", votes: 28 },
+      { name: "DreLock", team: "Shockers", stat: "1.9 STL · +142 diff", votes: 17 },
     ],
   },
   {
@@ -218,9 +293,9 @@ const awardPolls = [
     close: "Poll closes Week 8, Sunday 9:00 PM",
     voters: "Players, owners, and approved staff",
     options: [
-      { name: "KashFive", team: "West End Warriors", stat: "+8.2 PPG from last season", votes: 35 },
-      { name: "SplashMia", team: "Southside Splash", stat: "+4.4 PPG · better splits", votes: 26 },
-      { name: "JCity", team: "Hillwood Hoopers", stat: "+3.1 APG", votes: 19 },
+      { name: "KashFive", team: "Kings", stat: "+8.2 PPG from last season", votes: 35 },
+      { name: "SplashMia", team: "Pride", stat: "+4.4 PPG · better splits", votes: 26 },
+      { name: "JCity", team: "Sharks", stat: "+3.1 APG", votes: 19 },
     ],
   },
   {
@@ -229,9 +304,9 @@ const awardPolls = [
     close: "Poll closes Week 8, Sunday 9:00 PM",
     voters: "Players and approved staff",
     options: [
-      { name: "SplashMia", team: "Southside Splash", stat: "4 game-winners", votes: 33 },
-      { name: "DreLock", team: "North City Elite", stat: "61% clutch FG", votes: 29 },
-      { name: "JCity", team: "Hillwood Hoopers", stat: "11 late assists", votes: 21 },
+      { name: "SplashMia", team: "Pride", stat: "4 game-winners", votes: 33 },
+      { name: "DreLock", team: "Shockers", stat: "61% clutch FG", votes: 29 },
+      { name: "JCity", team: "Sharks", stat: "11 late assists", votes: 21 },
     ],
   },
   {
@@ -240,9 +315,9 @@ const awardPolls = [
     close: "Poll closes Week 8, Sunday 9:00 PM",
     voters: "Players only",
     options: [
-      { name: "JCity", team: "Hillwood Hoopers", stat: "Captain · lineup organizer", votes: 38 },
-      { name: "MaskOn", team: "Rim Breakers", stat: "Role-first big", votes: 24 },
-      { name: "KashFive", team: "West End Warriors", stat: "Free agent mentor", votes: 16 },
+      { name: "JCity", team: "Sharks", stat: "Captain · lineup organizer", votes: 38 },
+      { name: "MaskOn", team: "Rage", stat: "Role-first big", votes: 24 },
+      { name: "KashFive", team: "Kings", stat: "Free agent mentor", votes: 16 },
     ],
   },
 ];
@@ -254,9 +329,9 @@ const allStarPolls = [
     close: "All-Star voting closes Friday 8:00 PM",
     voters: "One guard vote per user",
     options: [
-      { name: "DreLock", team: "North City Elite", stat: "28.4 PPG", votes: 58 },
-      { name: "JCity", team: "Hillwood Hoopers", stat: "11.4 APG", votes: 45 },
-      { name: "SplashMia", team: "Southside Splash", stat: "52 FG%", votes: 26 },
+      { name: "DreLock", team: "Shockers", stat: "28.4 PPG", votes: 58 },
+      { name: "JCity", team: "Sharks", stat: "11.4 APG", votes: 45 },
+      { name: "SplashMia", team: "Pride", stat: "52 FG%", votes: 26 },
     ],
   },
   {
@@ -265,9 +340,9 @@ const allStarPolls = [
     close: "All-Star voting closes Friday 8:00 PM",
     voters: "One frontcourt vote per user",
     options: [
-      { name: "MaskOn", team: "Rim Breakers", stat: "18.9 PPG · 13.2 RPG", votes: 53 },
-      { name: "KashFive", team: "West End Warriors", stat: "21.5 PPG", votes: 34 },
-      { name: "DreLock", team: "North City Elite", stat: "Guard/wing eligible", votes: 22 },
+      { name: "MaskOn", team: "Rage", stat: "18.9 PPG · 13.2 RPG", votes: 53 },
+      { name: "KashFive", team: "Kings", stat: "21.5 PPG", votes: 34 },
+      { name: "DreLock", team: "Shockers", stat: "Guard/wing eligible", votes: 22 },
     ],
   },
   {
@@ -276,30 +351,30 @@ const allStarPolls = [
     close: "All-Star voting closes Friday 8:00 PM",
     voters: "Top overall vote-getter becomes captain",
     options: [
-      { name: "DreLock", team: "North City Elite", stat: "League-best record", votes: 61 },
-      { name: "MaskOn", team: "Rim Breakers", stat: "Defensive anchor", votes: 37 },
-      { name: "JCity", team: "Hillwood Hoopers", stat: "Floor general", votes: 32 },
+      { name: "DreLock", team: "Shockers", stat: "League-best record", votes: 61 },
+      { name: "MaskOn", team: "Rage", stat: "Defensive anchor", votes: 37 },
+      { name: "JCity", team: "Sharks", stat: "Floor general", votes: 32 },
     ],
   },
 ];
 
 const historyRecords = [
-  { type: "champion", season: "2025 Summer", title: "League Champion", winner: "North City Elite", detail: "Finals MVP: DreLock" },
+  { type: "champion", season: "2025 Summer", title: "League Champion", winner: "Shockers", detail: "Finals MVP: DreLock" },
   { type: "award", season: "2025 Summer", title: "Most Valuable Player", winner: "DreLock", detail: "28.4 PPG, 9.1 APG" },
   { type: "award", season: "2025 Summer", title: "Defensive Player of the Year", winner: "MaskOn", detail: "2.8 STL, 2.1 BLK" },
   { type: "award", season: "2025 Summer", title: "Clutch Player of the Year", winner: "SplashMia", detail: "4 game-winners" },
   { type: "award", season: "2025 Summer", title: "Teammate of the Year", winner: "JCity", detail: "Captain vote winner" },
-  { type: "tournament", season: "2025 Summer", title: "Midnight Madness Champion", winner: "Rim Breakers", detail: "Tournament MVP: MaskOn" },
-  { type: "tournament", season: "2025 Spring", title: "Weekend Rec Classic Champion", winner: "Hillwood Hoopers", detail: "Tournament MVP: JCity" },
-  { type: "champion", season: "2024 Winter", title: "League Champion", winner: "Southside Splash", detail: "Finals MVP: SplashMia" },
+  { type: "tournament", season: "2025 Summer", title: "Midnight Madness Champion", winner: "Rage", detail: "Tournament MVP: MaskOn" },
+  { type: "tournament", season: "2025 Spring", title: "Weekend Rec Classic Champion", winner: "Sharks", detail: "Tournament MVP: JCity" },
+  { type: "champion", season: "2024 Winter", title: "League Champion", winner: "Pride", detail: "Finals MVP: SplashMia" },
   { type: "award", season: "2024 Winter", title: "Most Improved Player", winner: "KashFive", detail: "+7.8 PPG" },
 ];
 
 const scheduledGames = [
   {
     id: "g42",
-    home: "North City Elite",
-    away: "Rim Breakers",
+    home: "Shockers",
+    away: "Rage",
     time: "Tonight · 8:30 PM",
     court: "Pro-Am Court 2",
     status: "Published",
@@ -309,8 +384,8 @@ const scheduledGames = [
   },
   {
     id: "g43",
-    home: "Hillwood Hoopers",
-    away: "Southside Splash",
+    home: "Sharks",
+    away: "Pride",
     time: "Tonight · 9:15 PM",
     court: "Rec Center A",
     status: "Live stats",
@@ -320,8 +395,8 @@ const scheduledGames = [
   },
   {
     id: "g44",
-    home: "West End Warriors",
-    away: "Park Kings",
+    home: "Kings",
+    away: "Huskies",
     time: "Tomorrow · 7:00 PM",
     court: "Rec Center B",
     status: "Court pending",
@@ -331,8 +406,8 @@ const scheduledGames = [
   },
   {
     id: "g45",
-    home: "North City Elite",
-    away: "Hillwood Hoopers",
+    home: "Shockers",
+    away: "Sharks",
     time: "Friday · 8:00 PM",
     court: "Pro-Am Court 1",
     status: "Featured",
@@ -354,36 +429,57 @@ const scheduledGames = [
 ];
 
 const teamStandings = [
-  { team: "North City Elite", division: "metro", w: 8, l: 1, home: "4-0", away: "4-1", last10: "8-1", streak: "W4", pf: 84.8, pa: 69.0 },
-  { team: "Hillwood Hoopers", division: "metro", w: 7, l: 2, home: "4-1", away: "3-1", last10: "7-2", streak: "W4", pf: 81.2, pa: 72.4 },
-  { team: "Rim Breakers", division: "coastal", w: 6, l: 3, home: "3-1", away: "3-2", last10: "6-3", streak: "W1", pf: 88.2, pa: 80.1 },
-  { team: "Southside Splash", division: "coastal", w: 5, l: 4, home: "3-2", away: "2-2", last10: "5-4", streak: "L1", pf: 79.5, pa: 77.7 },
-  { team: "West End Warriors", division: "metro", w: 4, l: 5, home: "3-2", away: "1-3", last10: "4-5", streak: "W1", pf: 76.8, pa: 78.9 },
-  { team: "Park Kings", division: "coastal", w: 4, l: 5, home: "2-2", away: "2-3", last10: "4-5", streak: "L2", pf: 74.4, pa: 76.2 },
-  { team: "Midtown", division: "metro", w: 3, l: 6, home: "2-3", away: "1-3", last10: "3-6", streak: "L1", pf: 72.1, pa: 79.6 },
-  { team: "Court Vision", division: "coastal", w: 3, l: 6, home: "1-3", away: "2-3", last10: "3-6", streak: "W1", pf: 70.8, pa: 78.0 },
-  { team: "Downtown Dynasty", division: "metro", w: 2, l: 7, home: "1-4", away: "1-3", last10: "2-7", streak: "L3", pf: 68.2, pa: 81.3 },
-  { team: "Uptown United", division: "coastal", w: 1, l: 8, home: "1-4", away: "0-4", last10: "1-8", streak: "L5", pf: 66.7, pa: 83.9 },
+  { team: "Shockers", division: "east", w: 8, l: 1, home: "4-0", away: "4-1", last10: "8-1", streak: "W4", pf: 84.8, pa: 69.0 },
+  { team: "Sharks", division: "east", w: 7, l: 2, home: "4-1", away: "3-1", last10: "7-2", streak: "W4", pf: 81.2, pa: 72.4 },
+  { team: "Rage", division: "east", w: 6, l: 3, home: "3-1", away: "3-2", last10: "6-3", streak: "W1", pf: 88.2, pa: 80.1 },
+  { team: "Pride", division: "east", w: 6, l: 3, home: "3-1", away: "3-2", last10: "6-3", streak: "L1", pf: 82.5, pa: 76.2 },
+  { team: "Kings", division: "east", w: 5, l: 4, home: "3-2", away: "2-2", last10: "5-4", streak: "W2", pf: 79.5, pa: 77.7 },
+  { team: "Huskies", division: "east", w: 5, l: 4, home: "3-2", away: "2-2", last10: "5-4", streak: "W1", pf: 78.8, pa: 77.1 },
+  { team: "Wave", division: "west", w: 4, l: 5, home: "2-2", away: "2-3", last10: "4-5", streak: "W1", pf: 75.0, pa: 76.5 },
+  { team: "Hoyas", division: "west", w: 4, l: 5, home: "2-2", away: "2-3", last10: "4-5", streak: "L1", pf: 76.8, pa: 78.9 },
+  { team: "Fusion", division: "west", w: 4, l: 5, home: "2-2", away: "2-3", last10: "4-5", streak: "L2", pf: 74.4, pa: 76.2 },
+  { team: "Energy", division: "west", w: 3, l: 6, home: "2-3", away: "1-3", last10: "3-6", streak: "L1", pf: 72.1, pa: 79.6 },
+  { team: "Dragons", division: "west", w: 2, l: 7, home: "1-4", away: "1-3", last10: "2-7", streak: "L3", pf: 68.2, pa: 81.3 },
+  { team: "Crush", division: "west", w: 1, l: 8, home: "1-4", away: "0-4", last10: "1-8", streak: "L5", pf: 66.7, pa: 83.9 },
+];
+
+const supportTickets = [
+  {
+    id: "MCPA-1042",
+    type: "Payment",
+    subject: "Registration payment still says pending",
+    status: "Open",
+    owner: "DreLock",
+    detail: "Player paid team registration but the roster slot did not unlock.",
+  },
+  {
+    id: "MCPA-1041",
+    type: "Bug report",
+    subject: "Twitch live light did not update",
+    status: "In review",
+    owner: "JCity",
+    detail: "Stream was live for ten minutes before the card refreshed.",
+  },
 ];
 
 const bracketSets = [
   [
-    ["1", "North City Elite", "Bye"],
-    ["8", "Southside Splash", "vs West End"],
-    ["4", "Rim Breakers", "vs Park Kings"],
-    ["5", "Hillwood Hoopers", "vs Midtown"],
+    ["1", "Shockers", "Bye"],
+    ["8", "Wave", "vs Fusion"],
+    ["4", "Pride", "vs Hoyas"],
+    ["5", "Kings", "vs Huskies"],
   ],
   [
-    ["1", "Hillwood Hoopers", "Bye"],
-    ["8", "Midtown", "vs Park Kings"],
-    ["4", "North City Elite", "vs Southside"],
-    ["5", "Rim Breakers", "vs West End"],
+    ["1", "Sharks", "Bye"],
+    ["8", "Fusion", "vs Wave"],
+    ["4", "Shockers", "vs Pride"],
+    ["5", "Rage", "vs Kings"],
   ],
   [
-    ["1", "Rim Breakers", "Bye"],
-    ["8", "North City Elite", "vs Midtown"],
-    ["4", "Southside Splash", "vs Park Kings"],
-    ["5", "Hillwood Hoopers", "vs West End"],
+    ["1", "Rage", "Bye"],
+    ["8", "Wave", "vs Energy"],
+    ["4", "Pride", "vs Huskies"],
+    ["5", "Sharks", "vs Kings"],
   ],
 ];
 
@@ -402,6 +498,8 @@ try {
   userVotes = {};
 }
 
+document.body.dataset.role = accountState.role;
+
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => {
     const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
@@ -409,7 +507,48 @@ function escapeHtml(value) {
   });
 }
 
+function teamLogoBadge(teamName, extraClass = "") {
+  const logo = teamLogos[teamName] || { text: teamName.slice(0, 2).toUpperCase(), color: "lime", image: "" };
+  const imageStyle = logo.image ? ` style="background-image: url('${logo.image}')"` : "";
+  const colorClass = logo.image ? "" : logo.color;
+  return `<span class="team-mark ${colorClass} ${logo.image ? "image-mark" : ""} ${extraClass}"${imageStyle}>${logo.image ? "" : logo.text}</span>`;
+}
+
+function renderTeamDirectory() {
+  const target = document.querySelector("#teamDirectory");
+  if (!target) return;
+
+  target.innerHTML = officialTeams
+    .map(
+      (team) => `
+        <article>
+          ${teamLogoBadge(team.name)}
+          <strong>${team.name}</strong>
+          <small>${team.division} division</small>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function openMenu() {
+  sideMenu.classList.add("is-open");
+  menuBackdrop.classList.add("is-open");
+  menuToggle.setAttribute("aria-expanded", "true");
+}
+
+function closeMenu() {
+  sideMenu.classList.remove("is-open");
+  menuBackdrop.classList.remove("is-open");
+  menuToggle.setAttribute("aria-expanded", "false");
+}
+
 function setTab(tabName) {
+  if (tabName === "admin" && accountState.role !== "admin") {
+    showToast("Admin controls are only visible to approved staff roles.");
+    tabName = "support";
+  }
+
   screens.forEach((screen) => {
     screen.classList.toggle("active", screen.id === `screen-${tabName}`);
   });
@@ -418,7 +557,96 @@ function setTab(tabName) {
     tab.classList.toggle("active", tab.dataset.tab === tabName);
   });
 
+  closeMenu();
   window.scrollTo({ top: 0, behavior: "smooth" });
+  appShell.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function connectedCount() {
+  return [accountState.platform, accountState.discord, accountState.twitch].filter(Boolean).length;
+}
+
+function updateLoginGate() {
+  document.querySelectorAll("[data-login-platform]").forEach((button) => {
+    button.classList.toggle("connected", button.dataset.loginPlatform === accountState.platform);
+  });
+
+  document.querySelectorAll("[data-required-connect]").forEach((button) => {
+    const connected = Boolean(accountState[button.dataset.requiredConnect]);
+    button.classList.toggle("connected", connected);
+    button.querySelector("strong").textContent = connected
+      ? `${button.dataset.requiredConnect === "discord" ? "Discord" : "Twitch"} connected`
+      : `Connect ${button.dataset.requiredConnect === "discord" ? "Discord" : "Twitch"}`;
+  });
+
+  document.querySelectorAll("[data-login-role]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.loginRole === accountState.role);
+  });
+
+  const complete = Boolean(accountState.platform && accountState.discord && accountState.twitch);
+  enterAppButton.disabled = !complete;
+  enterAppButton.textContent = complete
+    ? `Enter MCPA as ${accountState.role === "admin" ? "staff" : "player"}`
+    : `Connect required accounts (${connectedCount()}/3)`;
+}
+
+function updateConnectionCards() {
+  const states = [
+    ["discord", "#connectDiscord", "#discordStatusText", "Connected · roles synced to team chats"],
+    ["twitch", "#connectTwitch", "#twitchStatusText", "Connected · live status is required"],
+  ];
+
+  states.forEach(([key, buttonSelector, textSelector, connectedText]) => {
+    const card = document.querySelector(`[data-connection-card="${key}"]`);
+    const button = document.querySelector(buttonSelector);
+    const text = document.querySelector(textSelector);
+    if (!card || !button || !text) return;
+
+    card.classList.toggle("connected", accountState[key]);
+    button.textContent = accountState[key] ? "Connected" : "Connect";
+    button.disabled = accountState[key];
+    text.textContent = accountState[key] ? connectedText : "Required before league chat unlocks";
+  });
+}
+
+function unlockApp() {
+  if (!(accountState.platform && accountState.discord && accountState.twitch)) {
+    showToast("Connect Twitch, Discord, and either Xbox or PlayStation before entering.");
+    return;
+  }
+
+  accountState.signedIn = true;
+  document.body.dataset.role = accountState.role;
+  loginScreen.classList.add("hidden");
+  appShell.classList.remove("is-locked");
+  bottomNav.classList.remove("is-locked");
+  sideMenu.classList.remove("is-locked");
+  menuBackdrop.classList.remove("is-locked");
+  avatarButton.textContent = accountState.platform === "Xbox" ? "XB" : "PS";
+  avatarButton.setAttribute("aria-label", `${accountState.platform} verified profile`);
+  setTab("home");
+  showToast(`${accountState.platform}, Discord, and Twitch verified. ${accountState.role === "admin" ? "Staff controls unlocked." : "Player view unlocked."}`);
+}
+
+function signOut() {
+  accountState.signedIn = false;
+  accountState.platform = null;
+  accountState.discord = false;
+  accountState.twitch = false;
+  accountState.role = "player";
+  document.body.dataset.role = accountState.role;
+  profileModal.close();
+  closeMenu();
+  loginScreen.classList.remove("hidden");
+  appShell.classList.add("is-locked");
+  bottomNav.classList.add("is-locked");
+  sideMenu.classList.add("is-locked");
+  menuBackdrop.classList.add("is-locked");
+  avatarButton.textContent = "TL";
+  avatarButton.setAttribute("aria-label", "Commissioner profile");
+  updateLoginGate();
+  updateConnectionCards();
+  showToast("Signed out. Required account connections cleared.");
 }
 
 function showToast(message) {
@@ -547,6 +775,10 @@ function renderScheduledGames() {
     .map(
       (game) => `
         <article class="game-card schedule-card">
+          <div class="schedule-logos">
+            ${teamLogos[game.home] ? teamLogoBadge(game.home) : ""}
+            ${teamLogos[game.away] ? teamLogoBadge(game.away) : ""}
+          </div>
           <div class="game-main">
             <strong>${game.home} vs ${game.away}</strong>
             <small>${game.time} · ${game.court}</small>
@@ -595,21 +827,21 @@ function renderTeamStandings() {
 
   document.querySelector("#topSeedName").textContent = leader.team;
   document.querySelector("#topSeedRecord").textContent = `${leader.w}-${leader.l} · ${standingsPct(leader)}`;
+  renderPlayoffPicture(ranked);
 
   target.innerHTML = filtered
     .map((team) => {
-      const logo = teamLogos[team.team] || { text: team.team.slice(0, 2).toUpperCase(), color: "lime" };
       const diff = (team.pf - team.pa).toFixed(1);
       const gamesBack = ((leaderWins - team.w + team.l - leaderLosses) / 2).toFixed(1);
       const gb = team.seed === 1 ? "-" : gamesBack.replace(".0", "");
-      const seedClass = team.seed <= 6 ? "clinched" : team.seed <= 8 ? "bubble" : "outside";
+      const seedClass = team.seed <= 2 ? "clinched" : team.seed <= 4 ? "round" : team.seed <= 8 ? "bubble" : "outside";
 
       return `
         <tr class="${seedClass}">
           <td><span class="seed-number">${team.seed}</span></td>
           <td>
             <div class="standings-team">
-              <span class="team-mark ${logo.color}">${logo.text}</span>
+              ${teamLogoBadge(team.team)}
               <div><strong>${team.team}</strong><small>${team.division}</small></div>
             </div>
           </td>
@@ -626,6 +858,42 @@ function renderTeamStandings() {
       `;
     })
     .join("");
+}
+
+function renderPlayoffPicture(ranked = sortedStandings().map((team, index) => ({ ...team, seed: index + 1 }))) {
+  const byes = ranked.slice(0, 2);
+  const firstRound = ranked.slice(2, 4);
+  const playIn = ranked.slice(4, 8);
+  const [seed5, seed6, seed7, seed8] = playIn;
+  const targets = {
+    byes: document.querySelector("#playoffByes"),
+    first: document.querySelector("#firstRoundSeeds"),
+    playIn: document.querySelector("#playInGames"),
+    main: document.querySelector("#mainBracketMatchups"),
+  };
+
+  if (!targets.byes || !targets.first || !targets.playIn || !targets.main) return;
+
+  const seedLine = (team) => `
+    <div class="playoff-team">
+      ${teamLogoBadge(team.team)}
+      <strong>#${team.seed} ${team.team}</strong>
+      <small>${team.w}-${team.l}</small>
+    </div>
+  `;
+
+  targets.byes.innerHTML = byes.map(seedLine).join("");
+  targets.first.innerHTML = firstRound.map(seedLine).join("");
+  targets.playIn.innerHTML = `
+    <div><strong>Game 1</strong><small>#5 ${seed5.team} vs #6 ${seed6.team} · winner becomes #5</small></div>
+    <div><strong>Game 2</strong><small>#7 ${seed7.team} vs #8 ${seed8.team} · loser eliminated</small></div>
+    <div><strong>Game 3</strong><small>Loser of Game 1 vs winner of Game 2 · winner becomes #6</small></div>
+  `;
+  targets.main.innerHTML = `
+    <div><strong>First Round</strong><small>#3 ${firstRound[0].team} vs play-in #6</small></div>
+    <div><strong>First Round</strong><small>#4 ${firstRound[1].team} vs play-in #5</small></div>
+    <div><strong>Semifinals</strong><small>#1 ${byes[0].team} and #2 ${byes[1].team} enter with byes</small></div>
+  `;
 }
 
 function standingsPct(team) {
@@ -653,12 +921,11 @@ function renderStatLeaders() {
 
   target.innerHTML = leaders
     .map((player, index) => {
-      const logo = teamLogos[player.team] || { text: player.team.slice(0, 2).toUpperCase(), color: player.color };
       const value = Number(player[activeLeaderStat]).toFixed(config.precision);
       return `
         <button class="leader-card" type="button" data-leader-player="${player.name}">
           <span class="leader-rank">${index + 1}</span>
-          <span class="team-mark ${logo.color}">${logo.text}</span>
+          ${teamLogoBadge(player.team)}
           <span>
             <strong>${player.name}</strong>
             <small>${player.team} · ${player.position} · ${config.label}</small>
@@ -738,6 +1005,7 @@ function renderPlayers(list = players) {
             </small>
             <em>${player.teamRole} · ${player.chatAccess}</em>
             <em class="accolade-line">${player.accolades[0]}</em>
+            <em class="safety-line"><span class="verification-dot ${player.identityStatus.toLowerCase()}"></span>${player.platform} · ${player.identityStatus} · Trust ${player.trustScore}</em>
             ${player.isLive ? `<em class="stream-line"><span class="live-light on"></span>Live on Twitch · ${player.viewers} watching</em>` : ""}
           </span>
           <span class="stat">
@@ -771,6 +1039,7 @@ function openPlayer(index) {
     </div>
     <div class="profile-stats">
       <article><span>POS</span><strong>${player.position}</strong></article>
+      <article><span>Trust</span><strong>${player.trustScore}</strong></article>
       <article><span>PPG</span><strong>${player.ppg}</strong></article>
       <article><span>APG</span><strong>${player.apg}</strong></article>
       <article><span>RPG</span><strong>${player.rpg}</strong></article>
@@ -788,6 +1057,10 @@ function openPlayer(index) {
     <div class="permission-note">
       <strong>Connected accounts</strong>
       <small>Discord: ${player.discord} · Twitch: @${player.twitch}${player.isLive ? ` · Live now with ${player.viewers} viewers` : " · Offline"}</small>
+    </div>
+    <div class="permission-note">
+      <strong>Account verification</strong>
+      <small>${player.platform} name sync active · ${player.accountAge} old · ${player.identityStatus}. ${player.identityNote}. Internal console identifiers are never shown.</small>
     </div>
     <div class="accolade-stack">
       <strong>Accolades</strong>
@@ -818,6 +1091,69 @@ function renderBracket() {
     .join("");
 }
 
+function renderIdentityQueue() {
+  const target = document.querySelector("#identityQueue");
+  if (!target) return;
+
+  target.innerHTML = identityReviews
+    .map(
+      (review) => `
+        <article class="identity-card">
+          <div>
+            <div class="identity-topline">
+              <strong>${review.name}</strong>
+              <span class="risk-badge ${review.risk.toLowerCase()}">${review.risk}</span>
+            </div>
+            <small>${review.platform} · trust score ${review.score}</small>
+            <p>${review.issue}</p>
+            <em>${review.action}</em>
+          </div>
+          <div class="identity-actions">
+            <button class="ghost-button" type="button" data-identity-action="hold" data-identity-name="${review.name}">Hold</button>
+            <button class="solid-button" type="button" data-identity-action="clear" data-identity-name="${review.name}">Clear</button>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+
+  target.querySelectorAll("[data-identity-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.identityAction === "clear" ? "cleared" : "held for review";
+      showToast(`${button.dataset.identityName} ${action}. Staff action was added to the audit log.`);
+    });
+  });
+}
+
+function renderSupportTickets() {
+  const userTarget = document.querySelector("#ticketList");
+  const adminTarget = document.querySelector("#adminTicketQueue");
+  const markup = supportTickets
+    .map(
+      (ticket) => `
+        <article class="ticket-card">
+          <header>
+            <div>
+              <strong>${ticket.id} · ${escapeHtml(ticket.subject)}</strong>
+              <small>${escapeHtml(ticket.type)} · ${escapeHtml(ticket.owner)}</small>
+            </div>
+            <b>${ticket.status}</b>
+          </header>
+          <em>${escapeHtml(ticket.detail)}</em>
+        </article>
+      `,
+    )
+    .join("");
+
+  if (userTarget) {
+    userTarget.innerHTML = markup || `<article class="empty-state"><strong>No tickets yet</strong><small>Open a ticket when you need help.</small></article>`;
+  }
+
+  if (adminTarget) {
+    adminTarget.innerHTML = markup || `<article class="empty-state"><strong>No support queue</strong><small>Submitted tickets will show here for staff.</small></article>`;
+  }
+}
+
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => setTab(tab.dataset.tab));
 });
@@ -826,9 +1162,59 @@ shortcutButtons.forEach((button) => {
   button.addEventListener("click", () => setTab(button.dataset.tabTarget));
 });
 
+document.querySelectorAll("[data-login-platform]").forEach((button) => {
+  button.addEventListener("click", () => {
+    accountState.platform = button.dataset.loginPlatform;
+    updateLoginGate();
+    showToast(`${accountState.platform} connected. Display names will sync from the console account.`);
+  });
+});
+
+document.querySelectorAll("[data-required-connect]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const connection = button.dataset.requiredConnect;
+    accountState[connection] = true;
+    updateLoginGate();
+    updateConnectionCards();
+    showToast(`${connection === "discord" ? "Discord" : "Twitch"} connected and required for league access.`);
+  });
+});
+
+document.querySelectorAll("[data-login-role]").forEach((button) => {
+  button.addEventListener("click", () => {
+    accountState.role = button.dataset.loginRole;
+    document.body.dataset.role = accountState.role;
+    updateLoginGate();
+    showToast(accountState.role === "admin" ? "Staff demo selected. Admin controls will unlock after required connections." : "Player view selected. Admin controls stay hidden.");
+  });
+});
+
+enterAppButton.addEventListener("click", unlockApp);
+
+menuToggle.addEventListener("click", () => {
+  if (sideMenu.classList.contains("is-open")) {
+    closeMenu();
+    return;
+  }
+  openMenu();
+});
+
+menuBackdrop.addEventListener("click", closeMenu);
+menuClose.addEventListener("click", closeMenu);
+
+avatarButton.addEventListener("click", () => {
+  profileModal.showModal();
+});
+
 document.querySelector(".close-modal").addEventListener("click", () => {
   document.querySelector("#playerModal").close();
 });
+
+document.querySelector(".close-profile").addEventListener("click", () => {
+  profileModal.close();
+});
+
+signOutButton.addEventListener("click", signOut);
 
 document.querySelector("#playerSearch").addEventListener("input", (event) => {
   const term = event.target.value.trim().toLowerCase();
@@ -874,6 +1260,26 @@ document.querySelector("#shuffleSeeds").addEventListener("click", () => {
 
 document.querySelector("#publishSchedule").addEventListener("click", () => {
   showToast("Scheduled games published to teams, owners, and eligible players.");
+});
+
+document.querySelector("#createGameShortcut").addEventListener("click", () => {
+  document.querySelector(".schedule-form").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector("#scheduleHome").focus();
+  showToast("Schedule form opened. Add the teams, time, and court.");
+});
+
+document.querySelector("#addPlayerShortcut").addEventListener("click", () => {
+  if (accountState.role !== "admin") {
+    setTab("support");
+    document.querySelector("#ticketType").value = "Roster request";
+    document.querySelector("#ticketSubject").value = "Request to add player";
+    showToast("Roster additions require a team owner or staff role. A support ticket was started.");
+    return;
+  }
+
+  setTab("admin");
+  window.setTimeout(() => document.querySelector("#newRosterPlayer").focus(), 220);
+  showToast("Team owner roster tool opened.");
 });
 
 document.querySelectorAll("[data-standings-filter]").forEach((button) => {
@@ -925,16 +1331,69 @@ document.querySelector("#addScheduledGame").addEventListener("click", () => {
 });
 
 document.querySelector("#connectDiscord").addEventListener("click", () => {
-  showToast("Discord connection ready. Roles can sync to team chats and voice rooms.");
+  accountState.discord = true;
+  updateLoginGate();
+  updateConnectionCards();
+  showToast("Discord connected. Team chats and support tickets can sync roles.");
 });
 
 document.querySelector("#connectTwitch").addEventListener("click", () => {
-  showToast("Twitch connection ready. Live stream status can show on player cards.");
+  accountState.twitch = true;
+  updateLoginGate();
+  updateConnectionCards();
+  showToast("Twitch connected. Live status is mandatory and will show on player cards.");
 });
 
 document.querySelector("#refreshStreams").addEventListener("click", () => {
   renderLiveStreams();
   showToast("Stream list refreshed from connected Twitch accounts.");
+});
+
+document.querySelector("#submitTicket").addEventListener("click", () => {
+  const type = document.querySelector("#ticketType").value.trim();
+  const subject = document.querySelector("#ticketSubject").value.trim();
+  const detail = document.querySelector("#ticketDetails").value.trim();
+
+  if (!type || !subject || !detail) {
+    showToast("Add the issue type, subject, and details before submitting a support ticket.");
+    return;
+  }
+
+  supportTickets.unshift({
+    id: `MCPA-${1043 + supportTickets.length}`,
+    type,
+    subject,
+    status: "Open",
+    owner: accountState.platform ? `${accountState.platform} user` : "Player",
+    detail,
+  });
+  document.querySelector("#ticketSubject").value = "";
+  document.querySelector("#ticketDetails").value = "";
+  renderSupportTickets();
+  showToast("Support ticket submitted. Staff can now review it in the admin queue.");
+});
+
+document.querySelector("#refreshTickets").addEventListener("click", () => {
+  renderSupportTickets();
+  showToast("Support tickets refreshed.");
+});
+
+document.querySelector("#startRoomShortcut").addEventListener("click", () => {
+  showToast("Voice room started in demo mode. Production voice requires Discord voice integration.");
+});
+
+document.querySelectorAll(".room-card").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.classList.contains("locked")) {
+      showToast("That team room is locked. Team owner approval is required.");
+      return;
+    }
+
+    document.querySelectorAll(".room-card").forEach((room) => room.classList.remove("active"));
+    button.classList.add("active");
+    const roomName = button.querySelector("strong")?.textContent || "room";
+    showToast(`${roomName} selected.`);
+  });
 });
 
 document.querySelector("#statImage").addEventListener("change", (event) => {
@@ -974,17 +1433,25 @@ document.querySelector("#leagueLogoUpload").addEventListener("change", (event) =
 
 document.querySelector("#teamLogoUpload").addEventListener("change", (event) => {
   previewImage(event.target, (src) => {
-    teamLogos["North City Elite"].image = src;
-    const logo = document.querySelector("#northCityLogo");
+    teamLogos.Shockers.image = src;
+    const logo = document.querySelector("#primaryTeamLogo");
     logo.style.backgroundImage = `url("${src}")`;
     logo.textContent = "";
+    renderTeamDirectory();
+    renderTeamStandings();
+    renderStatLeaders();
     renderPlayers();
-    showToast("North City logo updated. Hover player team names to see it.");
+    showToast("Shockers logo updated. Hover player team names to see it.");
   });
 });
 
 document.querySelector("#grantStaffRole").addEventListener("click", () => {
   showToast("Staff role granted. Admin access is limited to approved staff accounts.");
+});
+
+document.querySelector("#runIdentityScan").addEventListener("click", () => {
+  renderIdentityQueue();
+  showToast("Xbox and PSN identity scan complete. Risk queue refreshed.");
 });
 
 document.querySelectorAll("[data-pay-choice]").forEach((button) => {
@@ -1036,6 +1503,35 @@ document.querySelectorAll("[data-money-tab]").forEach((tab) => {
   });
 });
 
+document.querySelector("#newChargeShortcut").addEventListener("click", () => {
+  document.querySelector("#payments-title").scrollIntoView({ behavior: "smooth", block: "start" });
+  showToast("New charge tools opened. Choose registration checkout or issue a fine.");
+});
+
+document.querySelectorAll("[data-payment-action]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const messages = {
+      stripe: "Demo Stripe flow opened. Live payments need your Stripe keys, backend checkout session, and webhooks.",
+      checkout: "Demo checkout drafted. Apple Pay, Google Pay, cards, PayPal, and Venmo need production provider setup.",
+      payout: "Demo payout scheduled. Real prize and staff payouts require verified Stripe Connect recipients.",
+    };
+    showToast(messages[button.dataset.paymentAction]);
+  });
+});
+
+document.querySelectorAll("[data-prototype-action]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const messages = {
+      "event-checkout": "Demo event checkout created. Live checkout needs payment provider setup.",
+      "invite-teams": "Team invite draft created for captains and owners.",
+      "generate-registration": "Tournament registration page generated in demo mode.",
+      "send-fine": "Fine notice sent in demo mode. Live billing requires Stripe checkout.",
+      "join-voice": "Voice join started in demo mode. Production voice rooms need Discord voice integration.",
+    };
+    showToast(messages[button.dataset.prototypeAction] || "Action completed.");
+  });
+});
+
 document.querySelectorAll("[data-awards-tab]").forEach((tab) => {
   tab.addEventListener("click", () => {
     document.querySelectorAll("[data-awards-tab]").forEach((item) => item.classList.remove("active"));
@@ -1071,14 +1567,19 @@ document.querySelector("#composer").addEventListener("submit", (event) => {
 
 renderPlayers();
 renderStatLeaders();
+renderTeamDirectory();
 renderBracket();
 renderTeamStandings();
 renderScheduledGames();
 renderLiveStreams();
+renderIdentityQueue();
+renderSupportTickets();
 renderAwardCatalog();
 renderPolls("#awardPolls", awardPolls);
 renderPolls("#allStarPolls", allStarPolls);
 renderHistory();
+updateLoginGate();
+updateConnectionCards();
 
 if ("serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("./service-worker.js").catch(() => {});

@@ -1,4 +1,4 @@
-const CACHE_NAME = "mcpa-prototype-v10";
+const CACHE_NAME = "mcpa-prototype-v18";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,18 @@ const APP_SHELL = [
   "./assets/mcpa-logo-full.png",
   "./assets/mcpa-logo-square.png",
   "./assets/mcpa-logo-wide.png",
+  "./assets/team-shockers.png",
+  "./assets/team-sharks.png",
+  "./assets/team-rage.png",
+  "./assets/team-pride.png",
+  "./assets/team-kings.png",
+  "./assets/team-huskies.png",
+  "./assets/team-hoyas.png",
+  "./assets/team-fusion.png",
+  "./assets/team-wave.png",
+  "./assets/team-energy.png",
+  "./assets/team-dragons.png",
+  "./assets/team-crush.png",
   "./sample-final-score.svg",
 ];
 

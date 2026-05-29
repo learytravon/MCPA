@@ -3,17 +3,93 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#161616" />
+    <meta name="theme-color" content="#070d16" />
     <title>MCPA</title>
-    <link rel="manifest" href="./manifest.webmanifest?v=mcpa-position-leaders" />
+    <link rel="manifest" href="./manifest.webmanifest?v=mcpa-account-actions" />
     <link rel="icon" href="./assets/mcpa-logo-square.png" type="image/png" />
     <link rel="apple-touch-icon" href="./assets/mcpa-logo-square.png" />
-    <link rel="stylesheet" href="./styles.css?v=mcpa-position-leaders" />
+    <link rel="stylesheet" href="./styles.css?v=mcpa-account-actions" />
   </head>
   <body>
-    <main class="app-shell" aria-label="MCPA mobile app prototype">
+    <section class="login-screen" id="loginScreen" aria-labelledby="login-title">
+      <div class="login-card">
+        <img class="login-logo" src="./assets/mcpa-logo-full.png" alt="MCPA 2K League logo" />
+        <p class="eyebrow">Verified league access</p>
+        <h1 id="login-title">Sign in to MCPA</h1>
+        <p class="login-copy">Every account must connect Twitch, Discord, and one console identity before league access unlocks.</p>
+
+        <div class="platform-login-stack" aria-label="Platform sign in choices">
+          <button class="platform-login xbox" type="button" data-login-platform="Xbox">
+            <span>XB</span>
+            <strong>Continue with Xbox</strong>
+            <small>Gamertag sync controls display name</small>
+          </button>
+          <button class="platform-login psn" type="button" data-login-platform="PSN">
+            <span>PS</span>
+            <strong>Continue with PSN</strong>
+            <small>PSN name sync controls display name</small>
+          </button>
+        </div>
+
+        <div class="required-connect-stack" aria-label="Required connected accounts">
+          <button class="connect-required" type="button" data-required-connect="discord">
+            <span>D</span>
+            <strong>Connect Discord</strong>
+            <small>Required for league, team, and support messages</small>
+          </button>
+          <button class="connect-required" type="button" data-required-connect="twitch">
+            <span>T</span>
+            <strong>Connect Twitch</strong>
+            <small>Required for live status and stream cards</small>
+          </button>
+        </div>
+
+        <div class="login-role-choice" aria-label="Prototype account role">
+          <button class="active" type="button" data-login-role="player">Player view</button>
+          <button type="button" data-login-role="admin">Staff demo</button>
+        </div>
+
+        <button class="solid-button full" id="enterApp" type="button" disabled>Connect required accounts</button>
+
+        <div class="trust-summary" aria-label="Account protection checks">
+          <article><strong>Name Sync</strong><small>Xbox or PSN name updates the player name</small></article>
+          <article><strong>Burner Score</strong><small>Flags brand-new or matched accounts</small></article>
+          <article><strong>Twitch Required</strong><small>Live status appears when players stream</small></article>
+        </div>
+
+        <div class="verification-steps">
+          <div class="done"><span></span><small>Console account required</small></div>
+          <div class="done"><span></span><small>Duplicate identity blocked</small></div>
+          <div><span></span><small>Risk review before team access</small></div>
+        </div>
+      </div>
+    </section>
+
+    <button class="menu-backdrop is-locked" id="menuBackdrop" type="button" aria-label="Close menu"></button>
+    <aside class="side-menu is-locked" id="sideMenu" aria-label="MCPA navigation menu">
+      <div class="menu-head">
+        <img src="./assets/mcpa-logo-square.png" alt="MCPA logo" />
+        <div>
+          <strong>MCPA</strong>
+          <small>League menu</small>
+        </div>
+        <button class="menu-close" id="menuClose" type="button" aria-label="Close menu">Close</button>
+      </div>
+      <button type="button" data-tab="home">Home</button>
+      <button type="button" data-tab="league">League</button>
+      <button type="button" data-tab="tournaments">Events</button>
+      <button type="button" data-tab="players">Players</button>
+      <button type="button" data-tab="awards">Awards</button>
+      <button type="button" data-tab="scan">Stat Scan</button>
+      <button type="button" data-tab="payments">Money</button>
+      <button class="admin-only" type="button" data-tab="admin">Admin</button>
+      <button type="button" data-tab="support">Support</button>
+      <button type="button" data-tab="chat">Chat</button>
+    </aside>
+
+    <main class="app-shell is-locked" aria-label="MCPA mobile app prototype">
       <header class="topbar">
-        <button class="icon-button" type="button" title="League switcher" aria-label="League switcher">
+        <button class="icon-button" id="menuToggle" type="button" title="Open menu" aria-label="Open menu" aria-expanded="false">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -35,34 +111,51 @@
             <h2 id="home-title">Week 4 lock-in</h2>
             <p class="hero-copy">8 games, 3 unpaid entries, 2 stat sheets waiting for review.</p>
           </div>
-          <div class="court-art" aria-label="Basketball court lineup visual">
-            <svg viewBox="0 0 260 170" role="img">
-              <rect x="7" y="7" width="246" height="156" rx="16" />
-              <path d="M18 85h224M130 8v154M59 45h58v80H59zM143 45h58v80h-58z" />
-              <path d="M88 63a22 22 0 0 1 0 44M172 63a22 22 0 0 0 0 44" />
-              <circle cx="130" cy="85" r="23" />
-              <circle cx="52" cy="85" r="8" />
-              <circle cx="208" cy="85" r="8" />
+          <div class="court-art live-court" aria-label="Animated live 5-on-5 basketball possession with a pass and score">
+            <svg viewBox="0 0 320 200" role="img" aria-label="Full basketball court">
+              <rect x="10" y="10" width="300" height="180" rx="22" />
+              <path d="M160 10v180M28 100h264M75 55h72v90H75zM173 55h72v90h-72z" />
+              <path d="M112 78a26 26 0 0 1 0 44M208 78a26 26 0 0 0 0 44" />
+              <circle cx="160" cy="100" r="31" />
+              <circle cx="64" cy="100" r="10" />
+              <circle cx="256" cy="100" r="10" />
             </svg>
-            <span class="pin pin-a">PG</span>
-            <span class="pin pin-b">C</span>
-            <span class="pin pin-c">SG</span>
+            <div class="scorebug" aria-hidden="true"><span>SHK 42</span><b>LIVE</b><span>RGE 39</span></div>
+            <span class="player-dot offense o-pg">PG</span>
+            <span class="player-dot offense o-sg">SG</span>
+            <span class="player-dot offense o-sf">SF</span>
+            <span class="player-dot offense o-pf">PF</span>
+            <span class="player-dot offense o-c">C</span>
+            <span class="player-dot defense d-pg">PG</span>
+            <span class="player-dot defense d-sg">SG</span>
+            <span class="player-dot defense d-sf">SF</span>
+            <span class="player-dot defense d-pf">PF</span>
+            <span class="player-dot defense d-c">C</span>
+            <span class="ball" aria-hidden="true"></span>
+            <span class="shot-arc" aria-hidden="true"></span>
+            <span class="score-flash" aria-hidden="true">+2</span>
           </div>
         </div>
 
-        <div class="league-logo-card">
-          <img src="./assets/mcpa-logo-wide.png" alt="MCPA 2K League logo" />
+        <aside class="ad-slot" aria-label="Advertisement" data-ad-placement="home-feed-banner">
+          <span>Advertisement</span>
           <div>
-            <strong>MCPA 2K League</strong>
-            <small>Main league branding is now loaded into the app.</small>
+            <strong>MCPA sponsor spot</strong>
+            <small>Responsive banner placement</small>
           </div>
+        </aside>
+
+        <div class="section-heading compact">
+          <h2>Official Teams</h2>
+          <span class="sync-badge">12 teams</span>
         </div>
+        <div class="team-directory" id="teamDirectory"></div>
 
         <div class="quick-grid" aria-label="League summary">
           <article>
             <span>Teams</span>
-            <strong>16</strong>
-            <small>4 divisions</small>
+            <strong>12</strong>
+            <small>official teams</small>
           </article>
           <article>
             <span>Revenue</span>
@@ -118,11 +211,19 @@
             </div>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
           </button>
-          <button class="task-card" type="button" data-tab-target="admin">
+          <button class="task-card admin-only" type="button" data-tab-target="admin">
             <span class="status-dot admin"></span>
             <div>
               <strong>Staff access review</strong>
               <small>2 role requests and 1 team-owner action pending</small>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+          <button class="task-card admin-only" type="button" data-tab-target="admin">
+            <span class="status-dot warn"></span>
+            <div>
+              <strong>2 burner-risk accounts flagged</strong>
+              <small>Xbox/PSN identity review required before roster access</small>
             </div>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
           </button>
@@ -143,7 +244,7 @@
             <p class="eyebrow">Season Control</p>
             <h2 id="league-title">Standings & Schedule</h2>
           </div>
-          <button class="icon-button dark" type="button" title="Create game" aria-label="Create game">
+          <button class="icon-button dark admin-only" id="createGameShortcut" type="button" title="Create game" aria-label="Create game">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           </button>
         </div>
@@ -151,20 +252,20 @@
         <div class="standings-kpis" aria-label="Standings summary">
           <article>
             <span>Top seed</span>
-            <strong id="topSeedName">North City Elite</strong>
+            <strong id="topSeedName">Shockers</strong>
             <small id="topSeedRecord">8-1 · .889</small>
           </article>
           <article>
             <span>Playoff line</span>
-            <strong id="playoffLine">8 seed</strong>
-            <small>Top 8 make playoffs</small>
+            <strong id="playoffLine">#8 cut line</strong>
+            <small>Top 8 enter postseason</small>
           </article>
         </div>
 
         <div class="standings-tabs" role="tablist" aria-label="Team standings filters">
           <button class="mini-tab active" type="button" data-standings-filter="all">All</button>
-          <button class="mini-tab" type="button" data-standings-filter="metro">Metro</button>
-          <button class="mini-tab" type="button" data-standings-filter="coastal">Coastal</button>
+          <button class="mini-tab" type="button" data-standings-filter="east">East</button>
+          <button class="mini-tab" type="button" data-standings-filter="west">West</button>
           <button class="mini-tab" type="button" data-standings-filter="playoff">Playoff</button>
         </div>
 
@@ -190,13 +291,37 @@
         </div>
 
         <div class="playoff-note">
-          <span class="seed-dot clinched"></span><strong>1-6</strong><small>Playoff position</small>
-          <span class="seed-dot bubble"></span><strong>7-8</strong><small>Playoff bubble</small>
+          <span class="seed-dot clinched"></span><strong>1-2</strong><small>Semifinal bye</small>
+          <span class="seed-dot round"></span><strong>3-4</strong><small>First round</small>
+          <span class="seed-dot bubble"></span><strong>5-8</strong><small>Play-in</small>
+        </div>
+
+        <div class="section-heading compact">
+          <h2>Playoff Picture</h2>
+          <span class="sync-badge">6-team bracket</span>
+        </div>
+        <div class="playoff-picture" aria-label="Playoff and play-in structure">
+          <article>
+            <span>Semifinal byes</span>
+            <div id="playoffByes"></div>
+          </article>
+          <article>
+            <span>First round locks</span>
+            <div id="firstRoundSeeds"></div>
+          </article>
+          <article class="wide">
+            <span>Play-in tournament</span>
+            <div id="playInGames"></div>
+          </article>
+          <article class="wide">
+            <span>Main bracket</span>
+            <div id="mainBracketMatchups"></div>
+          </article>
         </div>
 
         <div class="section-heading compact">
           <h2>Scheduled Games</h2>
-          <button class="text-button" id="publishSchedule" type="button">Publish</button>
+          <button class="text-button admin-only" id="publishSchedule" type="button">Publish</button>
         </div>
 
         <div class="schedule-filter" role="tablist" aria-label="Scheduled game filters">
@@ -208,15 +333,15 @@
 
         <div class="schedule-stack" id="scheduledGames"></div>
 
-        <div class="host-panel schedule-form">
+        <div class="host-panel schedule-form admin-only">
           <h2>Schedule Game</h2>
           <label>
             Home team
-            <input id="scheduleHome" type="text" value="North City Elite" />
+            <input id="scheduleHome" type="text" value="Shockers" />
           </label>
           <label>
             Away team
-            <input id="scheduleAway" type="text" value="Park Kings" />
+            <input id="scheduleAway" type="text" value="Sharks" />
           </label>
           <div class="split-fields">
             <label>
@@ -263,16 +388,16 @@
           </div>
           <div class="meter" aria-label="12 of 16 teams registered"><span style="width: 75%"></span></div>
           <div class="event-actions">
-            <button class="solid-button" type="button">Open checkout</button>
-            <button class="ghost-button" type="button">Invite teams</button>
+            <button class="solid-button" type="button" data-prototype-action="event-checkout">Open checkout</button>
+            <button class="ghost-button admin-only" type="button" data-prototype-action="invite-teams">Invite teams</button>
           </div>
         </article>
 
         <div class="bracket" id="bracket">
-          <article><span>1</span><strong>North City Elite</strong><small>Bye</small></article>
-          <article><span>8</span><strong>Southside Splash</strong><small>vs West End</small></article>
-          <article><span>4</span><strong>Rim Breakers</strong><small>vs Park Kings</small></article>
-          <article><span>5</span><strong>Hillwood Hoopers</strong><small>vs Midtown</small></article>
+          <article><span>1</span><strong>Shockers</strong><small>Bye</small></article>
+          <article><span>8</span><strong>Wave</strong><small>vs Fusion</small></article>
+          <article><span>4</span><strong>Pride</strong><small>vs Hoyas</small></article>
+          <article><span>5</span><strong>Kings</strong><small>vs Huskies</small></article>
         </div>
 
         <div class="host-panel">
@@ -291,7 +416,7 @@
               <input type="text" value="8" />
             </label>
           </div>
-          <button class="solid-button full" type="button">Generate registration page</button>
+          <button class="solid-button full admin-only" type="button" data-prototype-action="generate-registration">Generate registration page</button>
         </div>
       </section>
 
@@ -375,7 +500,7 @@
             <p class="eyebrow">Profiles</p>
             <h2 id="players-title">Players</h2>
           </div>
-          <button class="icon-button dark" type="button" title="Add player" aria-label="Add player">
+          <button class="icon-button dark" id="addPlayerShortcut" type="button" title="Add player" aria-label="Add player">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6" /></svg>
           </button>
         </div>
@@ -425,7 +550,7 @@
         </div>
 
         <figure class="score-example">
-          <img src="./sample-final-score.svg?v=mcpa-logo" alt="Example final score screenshot submitted for stat review" />
+          <img src="./sample-final-score.svg?v=mcpa-account-actions" alt="Example final score screenshot submitted for stat review" />
           <figcaption>Example of the final score screenshot players submit after a game.</figcaption>
         </figure>
 
@@ -463,7 +588,7 @@
             <p class="eyebrow">Money</p>
             <h2 id="payments-title">Payments & Fines</h2>
           </div>
-          <button class="primary-icon" type="button" title="New charge" aria-label="New charge">
+          <button class="primary-icon admin-only" id="newChargeShortcut" type="button" title="New charge" aria-label="New charge">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           </button>
         </div>
@@ -477,6 +602,51 @@
           </div>
         </div>
 
+        <div class="payment-portal">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Pay Portal</p>
+              <h2>Checkout & Payouts</h2>
+            </div>
+            <span class="sync-badge">Demo mode</span>
+          </div>
+          <article class="stripe-card admin-only">
+            <div>
+              <strong>League business account</strong>
+              <small>Connect Stripe as the MCPA merchant account for registrations, fines, awards, staff payroll, and winner payouts.</small>
+            </div>
+            <button class="solid-button" type="button" data-payment-action="stripe">Connect Stripe</button>
+          </article>
+          <div class="payment-methods" aria-label="Accepted payment methods">
+            <span>Apple Pay</span>
+            <span>Google Pay</span>
+            <span>Debit</span>
+            <span>Credit</span>
+            <span>PayPal</span>
+            <span>Venmo</span>
+          </div>
+          <div class="integration-note">
+            <strong>Production connection required</strong>
+            <small>This local build simulates checkout and payouts. Live payments require your Stripe business account, server-side keys, webhooks, and provider approval for PayPal/Venmo wallets.</small>
+          </div>
+          <div class="payout-grid">
+            <article>
+              <span>Prize wallet</span>
+              <strong>$1,250</strong>
+              <small>champions and accolade payouts</small>
+            </article>
+            <article class="admin-only">
+              <span>Staff payroll</span>
+              <strong>$420</strong>
+              <small>scheduled employee payments</small>
+            </article>
+          </div>
+          <div class="payment-actions">
+            <button class="ghost-button" type="button" data-payment-action="checkout">Create checkout</button>
+            <button class="ghost-button admin-only" type="button" data-payment-action="payout">Schedule payout</button>
+          </div>
+        </div>
+
         <div class="tabs" role="tablist" aria-label="Payment sections">
           <button class="mini-tab active" type="button" data-money-tab="registrations">Registrations</button>
           <button class="mini-tab" type="button" data-money-tab="fines">Fines</button>
@@ -484,39 +654,39 @@
 
         <div class="money-list active" id="registrations">
           <article>
-            <div><strong>Hillwood Hoopers</strong><small>Team entry · Midnight Madness</small></div>
+            <div><strong>Sharks</strong><small>Team entry · Midnight Madness</small></div>
             <span class="due">$75 due</span>
           </article>
           <article>
-            <div><strong>Park Kings</strong><small>Season dues · Week 4</small></div>
+            <div><strong>Huskies</strong><small>Season dues · Week 4</small></div>
             <span class="paid">Paid</span>
           </article>
           <article>
-            <div><strong>West End Warriors</strong><small>Late registration</small></div>
+            <div><strong>Kings</strong><small>Late registration</small></div>
             <span class="due">$125 due</span>
           </article>
         </div>
 
         <div class="money-list" id="fines">
           <article>
-            <div><strong>Southside Splash</strong><small>Quit before final · Game #42</small></div>
+            <div><strong>Pride</strong><small>Quit before final · Game #42</small></div>
             <span class="due">$40</span>
           </article>
           <article>
-            <div><strong>Rim Breakers</strong><small>Roster lock violation</small></div>
+            <div><strong>Rage</strong><small>Roster lock violation</small></div>
             <span class="due">$25</span>
           </article>
           <article>
-            <div><strong>North City Elite</strong><small>Paid late check-in fine</small></div>
+            <div><strong>Shockers</strong><small>Paid late check-in fine</small></div>
             <span class="paid">Paid</span>
           </article>
         </div>
 
-        <div class="host-panel">
+        <div class="host-panel admin-only">
           <h2>Issue Fine</h2>
           <label>
             Team or player
-            <input type="text" value="Southside Splash" />
+            <input type="text" value="Pride" />
           </label>
           <div class="split-fields">
             <label>
@@ -528,11 +698,11 @@
               <input type="text" value="$15" />
             </label>
           </div>
-          <button class="solid-button full" type="button">Send fine notice</button>
+          <button class="solid-button full admin-only" type="button" data-prototype-action="send-fine">Send fine notice</button>
         </div>
       </section>
 
-      <section class="screen" id="screen-admin" aria-labelledby="admin-title">
+      <section class="screen admin-only" id="screen-admin" aria-labelledby="admin-title">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Limited Access</p>
@@ -581,7 +751,7 @@
             <input id="leagueLogoUpload" type="file" accept="image/*" />
           </label>
           <label class="asset-upload" for="teamLogoUpload">
-            North City team logo
+            Shockers team logo
             <input id="teamLogoUpload" type="file" accept="image/*" />
           </label>
         </div>
@@ -605,14 +775,51 @@
           </article>
         </div>
 
+        <div class="section-heading compact">
+          <h2>Account Safety</h2>
+          <button class="text-button" type="button" id="runIdentityScan">Scan</button>
+        </div>
+        <div class="safety-grid" aria-label="Account verification summary">
+          <article>
+            <span>Verified</span>
+            <strong>142</strong>
+            <small>Xbox/PSN accounts locked</small>
+          </article>
+          <article>
+            <span>Review</span>
+            <strong>2</strong>
+            <small>burner-risk accounts</small>
+          </article>
+          <article>
+            <span>Blocked</span>
+            <strong>7</strong>
+            <small>duplicate attempts</small>
+          </article>
+          <article>
+            <span>Policy</span>
+            <strong>1:1</strong>
+            <small>one player, one account</small>
+          </article>
+        </div>
+        <div class="identity-list" id="identityQueue"></div>
+
+        <div class="host-panel identity-policy">
+          <h2>New Account Rules</h2>
+          <div class="safety-checklist">
+            <article><span></span><div><strong>Roster hold</strong><small>New accounts cannot join a team until Xbox/PSN identity clears.</small></div></article>
+            <article><span></span><div><strong>Duplicate match</strong><small>Same console ID, payment profile, device pattern, or gamertag history is sent to staff.</small></div></article>
+            <article><span></span><div><strong>Audit trail</strong><small>Approvals, denials, and staff overrides stay in the admin log.</small></div></article>
+          </div>
+        </div>
+
         <div class="host-panel team-owner-panel">
           <div class="owner-top">
             <div>
               <p class="eyebrow">Team Owner Console</p>
-              <h2>North City Elite</h2>
+              <h2>Shockers</h2>
               <small>Owner role: manage logo, add players, grant team chat access.</small>
             </div>
-            <div class="team-mark lime" id="northCityLogo">NC</div>
+            <div class="team-mark image-mark" id="primaryTeamLogo" style="background-image: url('./assets/team-shockers.png')" aria-label="Shockers logo"></div>
           </div>
 
           <div class="roster-meter">
@@ -626,8 +833,8 @@
 
           <div class="roster-list" id="rosterList">
             <article><span class="player-avatar lime">DL</span><div><strong>DreLock</strong><small>Team Owner · team chat, roster, logo</small></div><span class="paid">Owner</span></article>
-            <article><span class="player-avatar teal">JC</span><div><strong>JCity</strong><small>Captain · team chat, lineup posts</small></div><span class="sync-badge">Captain</span></article>
-            <article><span class="player-avatar orange">MO</span><div><strong>MaskOn</strong><small>Player · team chat</small></div><span class="sync-badge">Player</span></article>
+            <article><span class="player-avatar teal">LT</span><div><strong>LockTae</strong><small>Captain · team chat, lineup posts</small></div><span class="sync-badge">Captain</span></article>
+            <article><span class="player-avatar orange">SK</span><div><strong>ShotKev</strong><small>Player · team chat</small></div><span class="sync-badge">Player</span></article>
           </div>
 
           <label>
@@ -642,34 +849,77 @@
         </div>
       </section>
 
+      <section class="screen" id="screen-support" aria-labelledby="support-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Help Desk</p>
+            <h2 id="support-title">Support Tickets</h2>
+          </div>
+          <span class="sync-badge">User support</span>
+        </div>
+
+        <div class="support-intro">
+          <strong>Report league issues, bugs, payment problems, roster disputes, or stream connection trouble.</strong>
+          <small>Tickets are visible to approved staff only. Players can track their own ticket status here.</small>
+        </div>
+
+        <div class="host-panel">
+          <h2>Open Ticket</h2>
+          <label>
+            Issue type
+            <input id="ticketType" type="text" value="Bug report" />
+          </label>
+          <label>
+            Subject
+            <input id="ticketSubject" type="text" placeholder="What happened?" />
+          </label>
+          <label>
+            Details
+            <textarea id="ticketDetails" placeholder="Add game number, team, payment, or account details"></textarea>
+          </label>
+          <button class="solid-button full" id="submitTicket" type="button">Submit ticket</button>
+        </div>
+
+        <div class="section-heading compact">
+          <h2>My Tickets</h2>
+          <button class="text-button" id="refreshTickets" type="button">Refresh</button>
+        </div>
+        <div class="ticket-list" id="ticketList"></div>
+
+        <div class="host-panel admin-only">
+          <h2>Admin Queue</h2>
+          <div class="ticket-list" id="adminTicketQueue"></div>
+        </div>
+      </section>
+
       <section class="screen" id="screen-chat" aria-labelledby="chat-title">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Community</p>
             <h2 id="chat-title">Chats, Voice & Streams</h2>
           </div>
-          <button class="icon-button dark" type="button" title="Start room" aria-label="Start room">
+          <button class="icon-button dark" id="startRoomShortcut" type="button" title="Start room" aria-label="Start room">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10M8 7l4-4 4 4M4 14v3a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-3" /></svg>
           </button>
         </div>
 
         <div class="connection-grid" aria-label="Connected platforms">
-          <article class="connection-card discord">
+          <article class="connection-card discord" data-connection-card="discord">
             <div>
               <span class="platform-icon">D</span>
               <div>
                 <strong>Discord</strong>
-                <small>Roles synced · team chats unlocked</small>
+                <small id="discordStatusText">Required · connect before team chat unlocks</small>
               </div>
             </div>
             <button class="ghost-button" id="connectDiscord" type="button">Connect</button>
           </article>
-          <article class="connection-card twitch">
+          <article class="connection-card twitch" data-connection-card="twitch">
             <div>
               <span class="platform-icon">T</span>
               <div>
                 <strong>Twitch</strong>
-                <small>Live status, channel cards, viewer counts</small>
+                <small id="twitchStatusText">Required · live status must stay connected</small>
               </div>
             </div>
             <button class="ghost-button" id="connectTwitch" type="button">Connect</button>
@@ -693,11 +943,11 @@
           </button>
           <button class="room-card" type="button">
             <span class="status-dot warn"></span>
-            <div><strong>North City Team</strong><small>Private team chat · owner-granted roles only</small></div>
+            <div><strong>Shockers Team</strong><small>Private team chat · owner-granted roles only</small></div>
           </button>
           <button class="room-card locked" type="button">
             <span class="status-dot muted"></span>
-            <div><strong>Rim Breakers Team</strong><small>Locked · ask team owner for access</small></div>
+            <div><strong>Rage Team</strong><small>Locked · ask team owner for access</small></div>
           </button>
         </div>
 
@@ -707,7 +957,7 @@
             <strong>Captains Voice</strong>
             <small>Live room · push to talk</small>
           </div>
-          <button class="solid-button" type="button">Join</button>
+          <button class="solid-button" type="button" data-prototype-action="join-voice">Join</button>
         </div>
 
         <div class="chat-window" id="chatWindow">
@@ -716,11 +966,11 @@
             <p>Week 4 games lock at 7:45. Captains, confirm your five.</p>
           </article>
           <article class="message mine">
-            <span>North City</span>
+            <span>Shockers</span>
             <p>Roster is confirmed. Screenshot after Game 1.</p>
           </article>
           <article class="message">
-            <span>Rim Breakers</span>
+            <span>Rage</span>
             <p>Can we move Court 2 back fifteen minutes?</p>
           </article>
         </div>
@@ -733,7 +983,7 @@
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Main navigation">
+    <nav class="bottom-nav is-locked" aria-label="Main navigation">
       <button class="nav-item active" type="button" data-tab="home" aria-label="Home">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z" /></svg>
         <span>Home</span>
@@ -742,29 +992,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16V9M12 16V5M16 16v-4" /></svg>
         <span>League</span>
       </button>
-      <button class="nav-item" type="button" data-tab="tournaments" aria-label="Tournaments">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM5 5H3v2a4 4 0 0 0 4 4M19 5h2v2a4 4 0 0 1-4 4" /></svg>
-        <span>Events</span>
-      </button>
       <button class="nav-item" type="button" data-tab="players" aria-label="Players">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
         <span>Players</span>
-      </button>
-      <button class="nav-item" type="button" data-tab="awards" aria-label="Awards">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10l-1 7a4 4 0 0 1-8 0zM9 8h6M5 5H3v3a4 4 0 0 0 4 4M19 5h2v3a4 4 0 0 1-4 4" /></svg>
-        <span>Awards</span>
-      </button>
-      <button class="nav-item" type="button" data-tab="scan" aria-label="Scan stats">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 12h10M9 9h6M9 15h4" /></svg>
-        <span>Scan</span>
-      </button>
-      <button class="nav-item" type="button" data-tab="payments" aria-label="Payments">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4zM4 10h16M8 15h3" /></svg>
-        <span>Money</span>
-      </button>
-      <button class="nav-item" type="button" data-tab="admin" aria-label="Admin">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 7v5c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V7zM9 12l2 2 4-5" /></svg>
-        <span>Admin</span>
       </button>
       <button class="nav-item" type="button" data-tab="chat" aria-label="Chat">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>
@@ -779,8 +1009,42 @@
       <div id="modalContent"></div>
     </dialog>
 
+    <dialog class="player-modal profile-dialog" id="profileModal">
+      <button class="icon-button close-profile" type="button" title="Close profile" aria-label="Close profile">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+      </button>
+      <div class="modal-hero">
+        <span class="player-avatar lime">DL</span>
+        <div>
+          <p class="eyebrow">Shockers</p>
+          <h2>DreLock</h2>
+          <small>PG · Xbox verified · Team Owner</small>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <article><span>PPG</span><strong>28.4</strong></article>
+        <article><span>APG</span><strong>9.1</strong></article>
+        <article><span>Trust</span><strong>98</strong></article>
+      </div>
+      <div class="permission-note">
+        <strong>Player card</strong>
+        <small>Shockers owner, league champion, Finals MVP, verified MCPA profile, and Twitch live status enabled.</small>
+      </div>
+      <div class="permission-note">
+        <strong>Account sync</strong>
+        <small>Display name follows the connected Xbox or PlayStation account. Internal console identifiers are never shown to players.</small>
+      </div>
+      <div class="settings-list">
+        <strong>Settings</strong>
+        <label><span>Push notifications</span><input type="checkbox" checked /></label>
+        <label><span>Twitch live status required</span><input type="checkbox" checked disabled /></label>
+        <label><span>Discord team roles synced</span><input type="checkbox" checked disabled /></label>
+        <button class="ghost-button" id="signOutButton" type="button">Sign out</button>
+      </div>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="./app.js?v=mcpa-position-leaders"></script>
+    <script src="./app.js?v=mcpa-account-actions"></script>
   </body>
 </html>
