@@ -499,6 +499,67 @@ const supportTickets = [
   },
 ];
 
+const LeagueFinanceConfig = readStore("mcpaLeagueFinanceConfig", {
+  playerRegistrationFee: 35,
+  integrityDeposit: 15,
+  totalPlayerCost: 50,
+  prizePoolPercent: 55,
+  operationsPercent: 25,
+  platformProfitPercent: 20,
+  prizeExample: {
+    championTeam: 1200,
+    runnerUp: 400,
+    leagueMvp: 100,
+    finalsMvp: 100,
+    otherAwards: 50,
+    totalPrizePool: 1850,
+  },
+  paymentMode: "MOCK_SANDBOX",
+});
+
+function calculateLeagueFinanceSummary(playerCount = 96, finesCollected = 0) {
+  const entryRevenue = playerCount * LeagueFinanceConfig.playerRegistrationFee;
+  const depositPool = playerCount * LeagueFinanceConfig.integrityDeposit;
+  const totalCollected = playerCount * LeagueFinanceConfig.totalPlayerCost + finesCollected;
+  const prizePool = Math.round(entryRevenue * (LeagueFinanceConfig.prizePoolPercent / 100) + finesCollected * 0.5);
+  const operations = Math.round(entryRevenue * (LeagueFinanceConfig.operationsPercent / 100));
+  const platformProfit = entryRevenue - prizePool - operations;
+  return { playerCount, entryRevenue, depositPool, totalCollected, prizePool, operations, platformProfit, finesToPrizePool: Math.round(finesCollected * 0.5), mode: LeagueFinanceConfig.paymentMode };
+}
+
+let notifications = readStore("mcpaNotifications", [
+  {
+    id: "note-checkin",
+    userId: "preview-player",
+    type: "game-check-in",
+    title: "Game check-in opens soon",
+    message: "Shockers vs Sharks locks after all five players confirm position.",
+    read: false,
+    createdAt: new Date(Date.now() - 18 * 60 * 1000).toISOString(),
+    actionUrl: "league:schedule",
+  },
+  {
+    id: "note-ocr",
+    userId: "preview-player",
+    type: "stat-review",
+    title: "Stat review required",
+    message: "Upload a final score screenshot so staff can approve stats and MMR.",
+    read: false,
+    createdAt: new Date(Date.now() - 42 * 60 * 1000).toISOString(),
+    actionUrl: "scan",
+  },
+  {
+    id: "note-ticket",
+    userId: "preview-player",
+    type: "support-ticket-reply",
+    title: "Support queue active",
+    message: "Open disputes and bugs from your profile or the side menu.",
+    read: true,
+    createdAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+    actionUrl: "support",
+  },
+]);
+
 const voiceRooms = [
   {
     id: "community",
@@ -919,6 +980,9 @@ let typingUsers = readStore("mcpaTypingUsers", []);
 let typingClearTimer = null;
 let typingDebounceTimer = null;
 let demoTypingTimer = null;
+let mmrFilter = "overall";
+let mmrSort = "mmr";
+let mmrSearch = "";
 let userVotes = {};
 let draftPicks = createDraftOrder();
 let currentDraftPickIndex = 0;
@@ -946,6 +1010,175 @@ function readStore(key, fallback) {
 function writeStore(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
+
+function getUserInitials(username) {
+  const value = String(username || "").trim();
+  if (!value) return "?";
+  const parts = value.split(/\s+/).filter(Boolean);
+  if (parts.length > 1) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  const letters = value.replace(/[^a-z0-9]/gi, "");
+  return (letters.slice(0, 2) || "?").toUpperCase();
+}
+
+function getAvatarColor(username) {
+  const palette = ["#38d5ff", "#75eef7", "#ff4d66", "#b7ff3d", "#c8d4e3", "#8b5cf6", "#f59e0b", "#14b8a6"];
+  const value = String(username || "?");
+  const hash = Array.from(value).reduce((total, char) => (total * 31 + char.charCodeAt(0)) >>> 0, 7);
+  return palette[hash % palette.length];
+}
+
+function renderUserAvatar(user) {
+  const name = typeof user === "string" ? user : user?.displayName || user?.name || user?.gamertag || "";
+  const initials = getUserInitials(name);
+  const color = getAvatarColor(name);
+  return `<span class="generated-avatar" style="--avatar-color: ${color}">${escapeHtml(initials)}</span>`;
+}
+
+function normalizeConsoleName(platform) {
+  if (!platform) return "";
+  if (platform === "PSN" || platform === "PlayStation Network") return "PlayStation";
+  if (platform === "XB" || platform === "XBL") return "Xbox";
+  return platform;
+}
+
+function getUserConsoleLabel(user = accountState) {
+  const platform = normalizeConsoleName(user.platform || user.primaryConsole);
+  return platform || "Connect Console";
+}
+
+function refreshIdentityUI() {
+  const displayName = accountState.signedIn || accountState.registration ? currentUserName() : "";
+  const consoleLabel = getUserConsoleLabel();
+  if (avatarButton) {
+    avatarButton.textContent = getUserInitials(displayName);
+    avatarButton.style.setProperty("--avatar-color", getAvatarColor(displayName));
+    avatarButton.setAttribute("aria-label", `${displayName} profile`);
+  }
+  const badge = document.querySelector("#platformBadge");
+  if (badge) badge.textContent = consoleLabel;
+}
+
+function makeMockProvider(providerName) {
+  const stateKey = `mcpaProvider:${providerName}`;
+  const read = () => readStore(stateKey, null);
+  const write = (value) => writeStore(stateKey, value);
+  return {
+    providerName,
+    mockMode: true,
+    connectAccount(user = accountState) {
+      const username = providerName === "Xbox"
+        ? `${getUserInitials(currentUserName())}Xbox`
+        : providerName === "PlayStation"
+          ? `${getUserInitials(currentUserName())}PS`
+          : `${currentUserName().replace(/\s+/g, "")}_${providerName.toLowerCase()}`;
+      const record = {
+        providerName,
+        username,
+        platformUserId: `${providerName.toLowerCase()}-${username.toLowerCase()}`,
+        connectedAt: new Date().toISOString(),
+        userId: user.registration?.id || "preview-user",
+        duplicateRisk: false,
+        mockMode: true,
+      };
+      write(record);
+      return record;
+    },
+    disconnectAccount() {
+      write(null);
+      return true;
+    },
+    refreshConnection() {
+      return read() || this.connectAccount();
+    },
+    getConnectedUsername() {
+      return read()?.username || "";
+    },
+    getPlatformUserId() {
+      return read()?.platformUserId || "";
+    },
+    getOnlineStatus() {
+      return { providerName, status: "ONLINE", mockMode: true };
+    },
+    getLiveStatus() {
+      return providerName === "Twitch"
+        ? { isLive: true, title: "MCPA League ranked run", viewers: 42, mockMode: true }
+        : { isLive: false, title: "", viewers: 0, mockMode: true };
+    },
+    validateOwnership() {
+      return { valid: true, confidenceScore: 91, mockMode: true };
+    },
+    detectDuplicateLink() {
+      return { duplicate: false, flags: [], mockMode: true };
+    },
+  };
+}
+
+const XboxProvider = makeMockProvider("Xbox");
+const PlayStationProvider = makeMockProvider("PlayStation");
+const TwitchProvider = makeMockProvider("Twitch");
+const DiscordProvider = makeMockProvider("Discord");
+
+const CommissionerEngine = {
+  decisions: readStore("mcpaCommissionerDecisions", []),
+  auditLog: readStore("mcpaCommissionerAuditLog", []),
+  createDecision({ decisionType, userId = "system", teamId = null, gameId = null, systemDecision = "AUTO_PROCESSED", confidenceScore = 90, reasons = [], ruleReferences = [], appealAllowed = true, finalStatus = systemDecision }) {
+    const decision = {
+      id: `decision-${Date.now()}-${Math.random().toString(16).slice(2, 7)}`,
+      decisionType,
+      userId,
+      teamId,
+      gameId,
+      systemDecision,
+      confidenceScore,
+      reasons,
+      ruleReferences,
+      createdAt: new Date().toISOString(),
+      appealAllowed,
+      appealDeadline: appealAllowed ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+      appealStatus: appealAllowed ? "OPEN" : "NOT_ALLOWED",
+      finalStatus,
+    };
+    this.decisions.unshift(decision);
+    this.persist();
+    return decision;
+  },
+  appealDecision(decisionId, userId, reason, evidence = "") {
+    const decision = this.decisions.find((item) => item.id === decisionId);
+    if (!decision || !decision.appealAllowed) return null;
+    Object.assign(decision, {
+      appealStatus: "SUBMITTED",
+      finalStatus: "NEEDS_APPEAL_REVIEW",
+      appealedBy: userId,
+      appealReason: reason,
+      appealEvidence: evidence,
+      appealedAt: new Date().toISOString(),
+    });
+    this.persist();
+    return decision;
+  },
+  resolveAppeal(decisionId, adminId, outcome, note) {
+    const decision = this.decisions.find((item) => item.id === decisionId);
+    if (!decision) return null;
+    Object.assign(decision, {
+      appealStatus: outcome,
+      finalStatus: outcome === "OVERTURNED" ? "ADMIN_OVERRIDDEN" : "FINAL",
+      reviewedBy: adminId,
+      reviewNote: note,
+      reviewedAt: new Date().toISOString(),
+    });
+    this.audit("APPEAL_RESOLVED", { decisionId, adminId, outcome, note });
+    this.persist();
+    return decision;
+  },
+  audit(action, details = {}) {
+    this.auditLog.unshift({ id: `audit-${Date.now()}`, action, details, createdAt: new Date().toISOString() });
+    this.persist();
+  },
+  persist() {
+    writeStore("mcpaCommissionerDecisions", this.decisions);
+    writeStore("mcpaCommissionerAuditLog", this.auditLog);
+  },
+};
 
 try {
   userVotes = JSON.parse(localStorage.getItem("mcpaUserVotes") || "{}");
@@ -1580,6 +1813,644 @@ function persistRecordBooks() {
   writeStore("mcpaRecordBooks", recordBooks);
 }
 
+const ocrStatuses = ["NO_SCREENSHOT", "SCREENSHOT_UPLOADED", "OCR_PROCESSING", "OCR_COMPLETE", "OCR_LOW_CONFIDENCE", "NEEDS_REVIEW", "APPROVED", "REJECTED", "MMR_UPDATED"];
+const defaultStatReviewStore = {
+  uploads: [],
+  reviews: [],
+  provisionalResults: [],
+  wrongScreenshotReports: [],
+  mmrHistory: [],
+};
+let statReviewStore = readStore("mcpaStatReviewStore", defaultStatReviewStore);
+statReviewStore = { ...defaultStatReviewStore, ...statReviewStore };
+let activeStatReviewId = statReviewStore.reviews[0]?.id || null;
+
+function persistStatReviewStore() {
+  writeStore("mcpaStatReviewStore", statReviewStore);
+}
+
+async function generateImageHash(file) {
+  const fingerprint = `${file.name}-${file.size}-${file.lastModified}`;
+  if (!crypto?.subtle || !file.arrayBuffer) return fingerprint;
+  const buffer = await file.arrayBuffer();
+  const hash = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hash))
+    .slice(0, 16)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(reader.result));
+    reader.addEventListener("error", reject);
+    reader.readAsDataURL(file);
+  });
+}
+
+function previewUploadedScreenshot(file) {
+  return fileToDataUrl(file);
+}
+
+async function runOcrOnScreenshot(file) {
+  if (window.Tesseract?.recognize) {
+    const result = await window.Tesseract.recognize(file, "eng");
+    return {
+      ocrStatus: result.data.confidence >= 80 ? "OCR_COMPLETE" : "OCR_LOW_CONFIDENCE",
+      ocrRawText: result.data.text,
+      ocrConfidence: Math.round(result.data.confidence || 0),
+    };
+  }
+
+  return {
+    ocrStatus: "OCR_LOW_CONFIDENCE",
+    ocrRawText:
+      "OCR engine not available in this build. Upload preview saved. Manual review required.\n\nDEMO MODE SAMPLE\nShockers 84 Sharks 77\nDreLock 31 PTS 6 REB 9 AST 2 STL 0 BLK 3 TO 2 FLS 11-18 FG 4-8 3PT\nJCity 24 PTS 3 REB 11 AST 1 STL 0 BLK 2 TO 1 FLS 9-15 FG 3-6 3PT\nMaskOn 19 PTS 12 REB 4 AST 2 STL 1 BLK 1 TO 3 FLS 8-12 FG 1-2 3PT\nSplashMia 10 PTS 4 REB 3 AST 1 STL 1 BLK 1 TO 1 FLS 4-7 FG 1-3 3PT",
+    ocrConfidence: 52,
+    demoMode: true,
+  };
+}
+
+function matchOcrPlayerToRoster(detectedName, rosterPlayers = players) {
+  const clean = detectedName.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const exact = rosterPlayers.find((player) => [player.name, player.tag].some((value) => String(value).toLowerCase().replace(/[^a-z0-9]/g, "") === clean));
+  if (exact) return { player: exact, confidence: 98 };
+  const partial = rosterPlayers.find((player) => player.name.toLowerCase().includes(detectedName.toLowerCase()) || detectedName.toLowerCase().includes(player.name.toLowerCase()));
+  return partial ? { player: partial, confidence: 74 } : { player: null, confidence: 35 };
+}
+
+function parseOcrTextToStats(ocrText) {
+  const scoreMatch = ocrText.match(/(Shockers|Sharks|Rage|Pride|Kings|Huskies|Hoyas|Fusion|Wave|Energy|Dragons|Crush)\s+(\d{2,3}).*?(Shockers|Sharks|Rage|Pride|Kings|Huskies|Hoyas|Fusion|Wave|Energy|Dragons|Crush)\s+(\d{2,3})/is);
+  const gameScore = scoreMatch
+    ? { home: scoreMatch[1], homeScore: Number(scoreMatch[2]), away: scoreMatch[3], awayScore: Number(scoreMatch[4]) }
+    : { home: "Shockers", homeScore: 84, away: "Sharks", awayScore: 77 };
+
+  const demoRows = [
+    ["DreLock", "Shockers", 31, 6, 9, 2, 0, 3, 2, 11, 18, 4, 8],
+    ["JCity", "Shockers", 24, 3, 11, 1, 0, 2, 1, 9, 15, 3, 6],
+    ["MaskOn", "Shockers", 19, 12, 4, 2, 1, 1, 3, 8, 12, 1, 2],
+    ["SplashMia", "Shockers", 10, 4, 3, 1, 1, 1, 1, 4, 7, 1, 3],
+  ];
+
+  const parsedPlayers = demoRows.map(([detectedName, teamId, pts, reb, ast, stl, blk, tov, fouls, fgm, fga, threePm, threePa]) => {
+    const match = matchOcrPlayerToRoster(detectedName, players.filter((player) => player.team === teamId));
+    return {
+      playerId: match.player?.id || match.player?.name || null,
+      detectedName,
+      matchedPlayerName: match.player?.name || "",
+      matchConfidence: match.confidence,
+      teamId,
+      pts,
+      reb,
+      ast,
+      stl,
+      blk,
+      tov,
+      fouls,
+      fgm,
+      fga,
+      threePm,
+      threePa,
+      confidence: Math.min(92, match.confidence),
+      needsCorrection: match.confidence < 80,
+    };
+  });
+
+  return { parsedTeams: [gameScore.home, gameScore.away], parsedPlayers, gameScore };
+}
+
+function validateParsedStats(parsedStats, gameScore) {
+  const errors = [];
+  const teamPoints = parsedStats.reduce((totals, player) => {
+    totals[player.teamId] = (totals[player.teamId] || 0) + Number(player.pts || 0);
+    return totals;
+  }, {});
+  if (teamPoints[gameScore.home] && teamPoints[gameScore.home] !== gameScore.homeScore) errors.push(`${gameScore.home} player points do not match final score.`);
+  if (teamPoints[gameScore.away] && teamPoints[gameScore.away] !== gameScore.awayScore) errors.push(`${gameScore.away} player points do not match final score.`);
+  parsedStats.forEach((player) => {
+    if (!player.matchedPlayerName) errors.push(`${player.detectedName} needs roster mapping.`);
+    if (player.pts > 80 || player.ast > 35 || player.reb > 40 || player.tov > 15) errors.push(`${player.detectedName} has a stat that needs review.`);
+  });
+  return errors;
+}
+
+function calculateOcrConfidence(parsedStats) {
+  if (!parsedStats.length) return 0;
+  return Math.round(parsedStats.reduce((total, player) => total + Math.min(player.confidence, player.matchConfidence), 0) / parsedStats.length);
+}
+
+function parseOcrTextToGameResult(ocrText) {
+  return parseOcrTextToStats(ocrText).gameScore;
+}
+
+function parseOcrTextToPlayerStats(ocrText) {
+  return parseOcrTextToStats(ocrText).parsedPlayers;
+}
+
+function matchPlayerNamesToRoster(parsedNames, roster = players) {
+  return parsedNames.map((name) => {
+    const match = matchOcrPlayerToRoster(typeof name === "string" ? name : name.detectedName, roster);
+    return {
+      detectedName: typeof name === "string" ? name : name.detectedName,
+      matchedPlayerName: match.player?.name || "",
+      playerId: match.player?.id || null,
+      matchConfidence: match.confidence,
+    };
+  });
+}
+
+function validateGameScore(parsedResult) {
+  const errors = [];
+  if (!parsedResult?.home || !parsedResult?.away) errors.push("Missing team names.");
+  if (!Number.isFinite(parsedResult?.homeScore) || !Number.isFinite(parsedResult?.awayScore)) errors.push("Missing or invalid final score.");
+  if (parsedResult?.home === parsedResult?.away) errors.push("Both teams cannot be the same.");
+  return errors;
+}
+
+function validatePlayerStats(parsedStats) {
+  const errors = [];
+  parsedStats.forEach((stat) => {
+    if (!stat.matchedPlayerName) errors.push(`${stat.detectedName} needs roster mapping.`);
+    if (stat.pts > 80 || stat.reb > 40 || stat.ast > 35 || stat.stl > 12 || stat.blk > 12 || stat.tov > 15) errors.push(`${stat.detectedName} has an impossible-looking stat.`);
+    if (stat.fga && stat.fgm > stat.fga) errors.push(`${stat.detectedName} has more FGM than FGA.`);
+    if (stat.threePa && stat.threePm > stat.threePa) errors.push(`${stat.detectedName} has more 3PM than 3PA.`);
+  });
+  return errors;
+}
+
+function createProvisionalResult(gameId, parsedResult) {
+  const playerValidation = validatePlayerStats(parsedResult.parsedPlayers || []);
+  const scoreValidation = validateGameScore(parsedResult.gameScore || parsedResult);
+  const confidence = parsedResult.ocrConfidence ?? calculateOcrConfidence(parsedResult.parsedPlayers || []);
+  const result = {
+    id: `result-${Date.now()}`,
+    gameId,
+    parsedResult,
+    status: "PROVISIONAL",
+    confidenceScore: confidence,
+    validationErrors: [...scoreValidation, ...playerValidation, ...(parsedResult.validationErrors || [])],
+    disputeWindowClosesAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+    reports: [],
+    createdAt: new Date().toISOString(),
+    finalizedAt: null,
+  };
+  statReviewStore.provisionalResults.unshift(result);
+  CommissionerEngine.createDecision({
+    decisionType: "STAT_SCREENSHOT_PROVISIONAL_RESULT",
+    gameId,
+    systemDecision: "AUTO_PROCESSED",
+    confidenceScore: confidence,
+    reasons: result.validationErrors.length ? result.validationErrors : ["Screenshot parsed and provisional result created."],
+    ruleReferences: ["OCR confidence", "Roster mapping", "Final score validation"],
+    finalStatus: result.validationErrors.length || confidence < 80 ? "NEEDS_USER_ACTION" : "AUTO_PROCESSED",
+  });
+  persistStatReviewStore();
+  return result;
+}
+
+function autoFinalizeResultIfEligible(resultId) {
+  const result = statReviewStore.provisionalResults.find((item) => item.id === resultId);
+  if (!result) return null;
+  const severeReport = result.reports.some((report) => ["edited/tampered", "wrong winner detected", "duplicate screenshot"].includes(report.reason));
+  if (result.confidenceScore < 80 || result.validationErrors.length || result.reports.length || severeReport) {
+    result.status = severeReport ? "NEEDS_APPEAL_REVIEW" : "NEEDS_USER_ACTION";
+    persistStatReviewStore();
+    return result;
+  }
+  result.status = "FINAL";
+  result.finalizedAt = new Date().toISOString();
+  updateGameResultFromApprovedResult(resultId);
+  updatePlayerStatsFromApprovedResult(resultId);
+  updateMmrFromApprovedResult(resultId);
+  updateCareerHighsFromApprovedResult(resultId);
+  updateAccoladesFromApprovedResult(resultId);
+  updateHistoryBooksFromApprovedResult(resultId);
+  updateStandingsFromApprovedResult(resultId);
+  CommissionerEngine.createDecision({
+    decisionType: "GAME_RESULT_AUTO_FINALIZED",
+    gameId: result.gameId,
+    systemDecision: "AUTO_APPROVED",
+    confidenceScore: result.confidenceScore,
+    reasons: ["No dispute, high OCR confidence, no validation conflicts."],
+    ruleReferences: ["30-minute dispute window", "OCR threshold >= 80", "No severe integrity flags"],
+    finalStatus: "FINAL",
+  });
+  persistStatReviewStore();
+  return result;
+}
+
+function reportWrongScreenshot(resultId, userId, reason) {
+  const result = statReviewStore.provisionalResults.find((item) => item.id === resultId);
+  if (!result) return null;
+  const report = {
+    id: `wrong-shot-${Date.now()}`,
+    resultId,
+    userId,
+    reason,
+    status: "SUBMITTED",
+    createdAt: new Date().toISOString(),
+  };
+  result.reports.push(report);
+  result.status = "NEEDS_APPEAL_REVIEW";
+  statReviewStore.wrongScreenshotReports.unshift(report);
+  CommissionerEngine.createDecision({
+    decisionType: "WRONG_SCREENSHOT_REPORT",
+    userId,
+    gameId: result.gameId,
+    systemDecision: "NEEDS_APPEAL_REVIEW",
+    confidenceScore: 65,
+    reasons: [`User reported: ${reason}`],
+    ruleReferences: ["Screenshot dispute", "User appeal"],
+    finalStatus: "NEEDS_APPEAL_REVIEW",
+  });
+  persistStatReviewStore();
+  return report;
+}
+
+function resultReviewFor(resultId) {
+  const result = statReviewStore.provisionalResults.find((item) => item.id === resultId);
+  return statReviewStore.reviews.find((review) => review.resultId === resultId) || statReviewStore.reviews.find((review) => review.gameId === result?.gameId) || null;
+}
+
+function updateGameResultFromApprovedResult(resultId) {
+  const review = resultReviewFor(resultId);
+  if (!review) return null;
+  return updateGameResultFromApprovedStats(review.id);
+}
+
+function updatePlayerStatsFromApprovedResult(resultId) {
+  const review = resultReviewFor(resultId);
+  if (!review) return null;
+  return updatePlayerStatsFromApprovedStats(review.id);
+}
+
+function updateMmrFromApprovedResult(resultId) {
+  const review = resultReviewFor(resultId);
+  if (!review) return null;
+  return updateMmrFromApprovedStats(review.id);
+}
+
+function updateCareerHighsFromApprovedResult(resultId) {
+  const review = resultReviewFor(resultId);
+  if (!review) return null;
+  updateRecordBookFromApprovedStats(review.id);
+  return review;
+}
+
+function updateAccoladesFromApprovedResult(resultId) {
+  const review = resultReviewFor(resultId);
+  if (!review) return null;
+  const topScorer = [...review.parsedStats].sort((a, b) => b.pts - a.pts)[0];
+  if (topScorer) {
+    const player = players.find((item) => item.name === topScorer.matchedPlayerName || item.name === topScorer.detectedName);
+    if (player) {
+      player.accolades = Array.from(new Set([...(player.accolades || []), "Player of the Week Watch"]));
+    }
+  }
+  renderPlayers();
+  return true;
+}
+
+function updateHistoryBooksFromApprovedResult(resultId) {
+  const review = resultReviewFor(resultId);
+  if (!review) return null;
+  updateRecordBookFromApprovedStats(review.id);
+  return review;
+}
+
+function updateStandingsFromApprovedResult(resultId) {
+  const result = statReviewStore.provisionalResults.find((item) => item.id === resultId);
+  const score = result?.parsedResult?.gameScore;
+  if (!score) return null;
+  const winner = score.homeScore >= score.awayScore ? score.home : score.away;
+  const loser = winner === score.home ? score.away : score.home;
+  standingsData.forEach((team) => {
+    if (team.team === winner) team.w += 1;
+    if (team.team === loser) team.l += 1;
+  });
+  renderTeamStandings();
+  return { winner, loser };
+}
+
+function createStatReview(gameId, parsedStats) {
+  const validationErrors = validateParsedStats(parsedStats.parsedPlayers, parsedStats.gameScore);
+  const confidence = calculateOcrConfidence(parsedStats.parsedPlayers);
+  const review = {
+    id: `review-${Date.now()}`,
+    gameId,
+    parsedStats: parsedStats.parsedPlayers,
+    gameScore: parsedStats.gameScore,
+    validationErrors,
+    ocrConfidence: confidence,
+    reviewStatus: confidence < 80 || validationErrors.length ? "NEEDS_REVIEW" : "OCR_COMPLETE",
+    createdAt: new Date().toISOString(),
+    reviewedBy: null,
+    reviewedAt: null,
+  };
+  statReviewStore.reviews.unshift(review);
+  activeStatReviewId = review.id;
+  persistStatReviewStore();
+  return review;
+}
+
+async function uploadStatScreenshot(gameId, file) {
+  const imageUrl = await fileToDataUrl(file);
+  const imageHash = await generateImageHash(file);
+  const duplicate = statReviewStore.uploads.some((upload) => upload.imageHash === imageHash);
+  const upload = {
+    id: `upload-${Date.now()}`,
+    gameId,
+    uploadedBy: currentUserName(),
+    imageUrl,
+    imageHash,
+    uploadedAt: new Date().toISOString(),
+    ocrStatus: "SCREENSHOT_UPLOADED",
+    ocrRawText: "",
+    ocrConfidence: 0,
+    parsedTeams: [],
+    parsedPlayers: [],
+    validationErrors: duplicate ? ["Duplicate screenshot hash detected."] : [],
+    reviewStatus: "NEEDS_REVIEW",
+    reviewedBy: null,
+    reviewedAt: null,
+  };
+  statReviewStore.uploads.unshift(upload);
+  renderStatReview(upload.id);
+  const ocr = await runOcrOnScreenshot(file);
+  const parsed = parseOcrTextToStats(ocr.ocrRawText);
+  upload.ocrStatus = duplicate ? "NEEDS_REVIEW" : ocr.ocrStatus;
+  upload.ocrRawText = ocr.ocrRawText;
+  upload.ocrConfidence = ocr.ocrConfidence;
+  upload.parsedTeams = parsed.parsedTeams;
+  upload.parsedPlayers = parsed.parsedPlayers;
+  upload.validationErrors = [...upload.validationErrors, ...validateParsedStats(parsed.parsedPlayers, parsed.gameScore)];
+  const review = createStatReview(gameId, parsed);
+  review.uploadId = upload.id;
+  review.validationErrors = [...new Set([...review.validationErrors, ...upload.validationErrors])];
+  const provisional = createProvisionalResult(gameId, {
+    ...parsed,
+    ocrConfidence: Math.min(ocr.ocrConfidence, review.ocrConfidence),
+    validationErrors: review.validationErrors,
+  });
+  review.resultId = provisional.id;
+  review.reviewStatus = provisional.confidenceScore >= 80 && !provisional.validationErrors.length ? "AUTO_PROCESSED" : "NEEDS_REVIEW";
+  if (review.reviewStatus === "AUTO_PROCESSED") {
+    autoFinalizeResultIfEligible(provisional.id);
+    review.reviewStatus = "MMR_UPDATED";
+    upload.reviewStatus = "APPROVED";
+  }
+  persistStatReviewStore();
+  renderStatReview(review.id);
+  renderAdminDashboard();
+  return upload;
+}
+
+function currentStatReview() {
+  return statReviewStore.reviews.find((review) => review.id === activeStatReviewId) || statReviewStore.reviews[0] || null;
+}
+
+function applyReviewEdits(review) {
+  document.querySelectorAll("[data-ocr-stat]").forEach((input) => {
+    const player = review.parsedStats.find((row) => row.detectedName === input.dataset.ocrPlayer);
+    if (player) player[input.dataset.ocrStat] = Number(input.value || 0);
+  });
+}
+
+function updateGameResultFromApprovedStats(reviewId) {
+  const review = statReviewStore.reviews.find((item) => item.id === reviewId);
+  if (!review) return null;
+  gameResults.unshift({
+    label: review.reviewStatus === "MMR_UPDATED" ? "APPROVED FINAL" : "PENDING FINAL",
+    game: `${review.gameScore.home} vs ${review.gameScore.away}`,
+    submitted: "Approved now",
+    home: review.gameScore.home,
+    away: review.gameScore.away,
+    homeScore: review.gameScore.homeScore,
+    awayScore: review.gameScore.awayScore,
+    winner: review.gameScore.homeScore >= review.gameScore.awayScore ? review.gameScore.home : review.gameScore.away,
+  });
+  renderScoreResults();
+  return review;
+}
+
+function updatePlayerStatsFromApprovedStats(reviewId) {
+  const review = statReviewStore.reviews.find((item) => item.id === reviewId);
+  if (!review) return;
+  review.parsedStats.forEach((stat) => {
+    const player = players.find((item) => item.name === stat.matchedPlayerName || item.name === stat.detectedName);
+    if (!player) return;
+    player.ppg = Math.round(((player.ppg || 0) * 9 + stat.pts) / 10 * 10) / 10;
+    player.rpg = Math.round(((player.rpg || 0) * 9 + stat.reb) / 10 * 10) / 10;
+    player.apg = Math.round(((player.apg || 0) * 9 + stat.ast) / 10 * 10) / 10;
+  });
+  renderPlayers();
+  renderStatLeaders();
+}
+
+function updateMmrFromApprovedStats(reviewId) {
+  const review = statReviewStore.reviews.find((item) => item.id === reviewId);
+  if (!review) return;
+  const winner = review.gameScore.homeScore >= review.gameScore.awayScore ? review.gameScore.home : review.gameScore.away;
+  const homePlayers = rankedPlayers.filter((player) => player.teamId === review.gameScore.home);
+  const awayPlayers = rankedPlayers.filter((player) => player.teamId === review.gameScore.away);
+  const avgHome = homePlayers.reduce((total, player) => total + player.mmr, 0) / Math.max(1, homePlayers.length);
+  const avgAway = awayPlayers.reduce((total, player) => total + player.mmr, 0) / Math.max(1, awayPlayers.length);
+  rankedPlayers = rankedPlayers.map((player) => {
+    const stat = review.parsedStats.find((row) => row.matchedPlayerName === player.name || row.detectedName === player.name);
+    if (!stat) return player;
+    const beforeMmr = player.mmr;
+    const updated = window.MCPA_MMR.updatePlayerMmr(player, {
+      won: player.teamId === winner,
+      playerTeamAvgMmr: player.teamId === review.gameScore.home ? avgHome : avgAway,
+      opponentTeamAvgMmr: player.teamId === review.gameScore.home ? avgAway : avgHome,
+      stats: {
+        points: stat.pts,
+        rebounds: stat.reb,
+        assists: stat.ast,
+        steals: stat.stl,
+        blocks: stat.blk,
+        turnovers: stat.tov,
+        fouls: stat.fouls,
+        fgm: stat.fgm,
+        fga: stat.fga,
+        threePm: stat.threePm,
+        threePa: stat.threePa,
+      },
+      behaviorPenalty: 0,
+    });
+    statReviewStore.mmrHistory.unshift({
+      playerId: player.id,
+      beforeMmr,
+      afterMmr: updated.mmr,
+      mmrChange: updated.mmr - beforeMmr,
+      reason: "Approved OCR stat review",
+      gameId: review.gameId,
+      approvedBy: review.reviewedBy,
+      approvedAt: review.reviewedAt,
+    });
+    return updated;
+  });
+  persistRankedPlayers();
+  renderMmrRankings();
+}
+
+function updateRecordBookFromApprovedStats(reviewId) {
+  const review = statReviewStore.reviews.find((item) => item.id === reviewId);
+  if (!review) return;
+  review.parsedStats.forEach((stat) => {
+    const name = stat.matchedPlayerName || stat.detectedName;
+    const recordChecks = [
+      ["Single-game points", stat.pts],
+      ["Single-game assists", stat.ast],
+      ["Single-game rebounds", stat.reb],
+      ["Season points", stat.pts],
+      ["Season assists", stat.ast],
+      ["Season rebounds", stat.reb],
+    ];
+    recordChecks.forEach(([category, value]) => {
+      const book = category.startsWith("Season") ? recordBooks.seasonHighs : recordBooks.leagueRecords;
+      const current = book.find((record) => record.category === category);
+      if (!current || Number(value) > Number(current.value)) {
+        if (current) Object.assign(current, { player: name, value, detail: `Approved ${review.gameId}` });
+        else book.unshift({ scope: "League", category, player: name, value, detail: `Approved ${review.gameId}` });
+      }
+    });
+  });
+  persistRecordBooks();
+  renderHistoryBooks();
+}
+
+function approveStatReview(reviewId, adminId) {
+  const review = statReviewStore.reviews.find((item) => item.id === reviewId);
+  if (!review) return null;
+  applyReviewEdits(review);
+  review.reviewStatus = "APPROVED";
+  review.reviewedBy = adminId;
+  review.reviewedAt = new Date().toISOString();
+  updateGameResultFromApprovedStats(reviewId);
+  updatePlayerStatsFromApprovedStats(reviewId);
+  updateMmrFromApprovedStats(reviewId);
+  updateRecordBookFromApprovedStats(reviewId);
+  review.reviewStatus = "MMR_UPDATED";
+  if (review.resultId) {
+    const result = statReviewStore.provisionalResults.find((item) => item.id === review.resultId);
+    if (result) {
+      result.status = "FINAL";
+      result.finalizedAt = new Date().toISOString();
+    }
+  }
+  CommissionerEngine.createDecision({
+    decisionType: "STAT_REVIEW_APPROVED",
+    userId: adminId,
+    gameId: review.gameId,
+    systemDecision: "AUTO_PROCESSED",
+    confidenceScore: review.ocrConfidence,
+    reasons: ["Stat review finalized and MMR/standings/history updated."],
+    ruleReferences: ["Stat validation", "MMR formula", "Record book update"],
+    finalStatus: "FINAL",
+  });
+  notifications.unshift({
+    id: `note-mmr-${Date.now()}`,
+    userId: "preview-player",
+    type: "mmr-updated",
+    title: "MMR updated",
+    message: `${review.gameScore.home} vs ${review.gameScore.away} stats were approved and ratings were updated.`,
+    read: false,
+    createdAt: new Date().toISOString(),
+    actionUrl: "rankings",
+  });
+  writeStore("mcpaNotifications", notifications);
+  persistStatReviewStore();
+  renderStatReview(reviewId);
+  renderAdminDashboard();
+  renderNotifications();
+  showToast("Approved. Standings, stats, MMR, record book, and awards checks updated.");
+  return review;
+}
+
+function rejectStatReview(reviewId, adminId, reason) {
+  const review = statReviewStore.reviews.find((item) => item.id === reviewId);
+  if (!review) return null;
+  review.reviewStatus = "REJECTED";
+  review.reviewedBy = adminId;
+  review.reviewedAt = new Date().toISOString();
+  review.rejectionReason = reason || "Rejected by admin.";
+  persistStatReviewStore();
+  renderStatReview(reviewId);
+  renderAdminDashboard();
+  return review;
+}
+
+function renderStatReview(reviewId = activeStatReviewId) {
+  const review = statReviewStore.reviews.find((item) => item.id === reviewId) || currentStatReview();
+  const statusText = document.querySelector("#ocrStatusText");
+  const confidence = document.querySelector("#ocrConfidenceBadge");
+  const summary = document.querySelector("#ocrReviewSummary");
+  const warnings = document.querySelector("#ocrValidationWarnings");
+  const table = document.querySelector("#ocrReviewTable");
+  const raw = document.querySelector("#ocrRawText");
+  const pipeline = document.querySelector("#ocrPipeline");
+  if (!statusText || !confidence || !summary || !warnings || !table || !raw) return;
+
+  if (!review) {
+    statusText.textContent = "Upload a final score screenshot to start stat review.";
+    confidence.textContent = "No upload";
+    summary.innerHTML = `<article class="empty-state"><strong>No OCR uploads</strong><small>Upload a final score screenshot to start stat review.</small></article>`;
+    warnings.innerHTML = "";
+    table.innerHTML = "";
+    raw.textContent = "No OCR text yet.";
+    if (pipeline) {
+      pipeline.innerHTML = `
+        <article><span></span><div><strong>No screenshot</strong><small>Upload required</small></div></article>
+        <article><span></span><div><strong>OCR pending</strong><small>Engine check</small></div></article>
+        <article><span></span><div><strong>System decision</strong><small>Auto-finalize or route appeal</small></div></article>
+      `;
+    }
+    return;
+  }
+
+  const upload = statReviewStore.uploads.find((item) => item.id === review.uploadId);
+  activeStatReviewId = review.id;
+  statusText.textContent = upload?.ocrStatus === "OCR_LOW_CONFIDENCE"
+    ? "OCR engine not available in this build. Upload preview saved. Manual review required."
+    : `${review.reviewStatus}: system validation auto-finalizes clean results and routes disputes to staff.`;
+  confidence.textContent = `${review.ocrConfidence}% confidence`;
+  summary.innerHTML = `
+    <article class="score-summary-card">
+      <strong>${escapeHtml(review.gameScore.home)} ${review.gameScore.homeScore} - ${review.gameScore.awayScore} ${escapeHtml(review.gameScore.away)}</strong>
+      <small>${escapeHtml(review.gameId)} · ${escapeHtml(review.reviewStatus)} · uploaded by ${escapeHtml(upload?.uploadedBy || currentUserName())}</small>
+    </article>
+  `;
+  warnings.innerHTML = review.validationErrors.length
+    ? review.validationErrors.map((error) => `<article class="ocr-warning">${escapeHtml(error)}</article>`).join("")
+    : `<article class="ocr-good">No hard validation conflicts. Eligible for automatic result finalization.</article>`;
+  table.innerHTML = `
+    <div class="ocr-row head"><span>Player</span><span>PTS</span><span>REB</span><span>AST</span><span>Map</span></div>
+    ${review.parsedStats
+      .map(
+        (stat) => `
+          <article class="ocr-row ${stat.needsCorrection ? "needs-review" : ""}">
+            <span><strong>${escapeHtml(stat.detectedName)}</strong><small>${escapeHtml(stat.teamId)} · ${stat.matchConfidence}% match</small></span>
+            <input data-ocr-player="${escapeHtml(stat.detectedName)}" data-ocr-stat="pts" type="number" value="${stat.pts}" />
+            <input data-ocr-player="${escapeHtml(stat.detectedName)}" data-ocr-stat="reb" type="number" value="${stat.reb}" />
+            <input data-ocr-player="${escapeHtml(stat.detectedName)}" data-ocr-stat="ast" type="number" value="${stat.ast}" />
+            <span>${escapeHtml(stat.matchedPlayerName || "Needs map")}</span>
+          </article>
+        `,
+      )
+      .join("")}
+  `;
+  raw.textContent = upload?.ocrRawText || "OCR raw text unavailable.";
+  if (pipeline) {
+    pipeline.innerHTML = `
+      <article class="done"><span></span><div><strong>Screenshot uploaded</strong><small>${escapeHtml(upload?.ocrStatus || "SCREENSHOT_UPLOADED")}</small></div></article>
+      <article class="${review.ocrConfidence >= 80 ? "done" : ""}"><span></span><div><strong>OCR parsed</strong><small>${review.ocrConfidence}% confidence</small></div></article>
+      <article class="${["MMR_UPDATED", "AUTO_PROCESSED", "FINAL"].includes(review.reviewStatus) ? "done" : ""}"><span></span><div><strong>System decision</strong><small>${escapeHtml(review.reviewStatus)}</small></div></article>
+    `;
+  }
+}
+
 function getRegistration() {
   const statedCity = document.querySelector("#signupCity").value.trim();
   const statedState = normalizeState(document.querySelector("#signupState").value);
@@ -1625,8 +2496,7 @@ function isRegistrationComplete() {
 }
 
 function initialsFromName(name) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return (parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : name.slice(0, 2)).toUpperCase();
+  return getUserInitials(name);
 }
 
 function addRegistrationToDraftPool() {
@@ -1705,7 +2575,7 @@ function closeMenu() {
 }
 
 function setTab(tabName) {
-  if (tabName === "admin" && accountState.role !== "admin") {
+  if (["admin", "movement"].includes(tabName) && !isAdminRole()) {
     showToast("Admin controls are only visible to approved staff roles.");
     tabName = "support";
   }
@@ -1729,8 +2599,28 @@ function setTab(tabName) {
   }
 }
 
+function setLeaguePanel(panelName = "overview") {
+  const selected = document.querySelector(`[data-league-panel="${panelName}"]`) ? panelName : "overview";
+  document.querySelectorAll("[data-league-panel-target]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.leaguePanelTarget === selected);
+  });
+  document.querySelectorAll("[data-league-panel]").forEach((panel) => {
+    panel.classList.toggle("active", panel.dataset.leaguePanel === selected);
+  });
+  if (selected === "scores") renderScoreResults();
+  if (selected === "records") renderLeagueRecordPanel();
+}
+
 function connectedCount() {
   return [accountState.platform, accountState.discord, accountState.twitch].filter(Boolean).length;
+}
+
+function isAdminRole(role = accountState.role) {
+  return ["admin", "staff", "commissioner"].includes(role);
+}
+
+function isCaptainRole(role = accountState.role) {
+  return ["captain", "team-owner", "admin", "staff", "commissioner"].includes(role);
 }
 
 function updateLoginGate() {
@@ -1755,7 +2645,7 @@ function updateLoginGate() {
   const complete = Boolean(accountState.platform && accountState.discord && accountState.twitch && registrationComplete);
   enterAppButton.disabled = !complete;
   if (complete) {
-    enterAppButton.textContent = `Enter MCPA as ${accountState.role === "admin" ? "staff" : "player"}`;
+    enterAppButton.textContent = `Enter MCPA as ${isAdminRole() ? "staff" : accountState.role === "captain" ? "captain" : "player"}`;
   } else if (!registrationComplete) {
     enterAppButton.textContent = "Complete registration form";
   } else {
@@ -1837,9 +2727,7 @@ function unlockApp() {
   bottomNav.classList.remove("is-locked");
   sideMenu.classList.remove("is-locked");
   menuBackdrop.classList.remove("is-locked");
-  avatarButton.textContent = accountState.platform === "Xbox" ? "XB" : "PS";
-  avatarButton.setAttribute("aria-label", `${accountState.platform} verified profile`);
-  document.querySelector("#platformBadge").textContent = accountState.platform === "Xbox" ? "Xbox" : "PSN";
+  refreshIdentityUI();
   renderDraftRoom();
   renderDirectMessages();
   renderVoiceRooms();
@@ -1849,6 +2737,7 @@ function unlockApp() {
 }
 
 function signOut() {
+  [XboxProvider, PlayStationProvider, TwitchProvider, DiscordProvider].forEach((provider) => provider.disconnectAccount());
   accountState.signedIn = false;
   accountState.platform = null;
   accountState.discord = false;
@@ -1863,9 +2752,7 @@ function signOut() {
   bottomNav.classList.add("is-locked");
   sideMenu.classList.add("is-locked");
   menuBackdrop.classList.add("is-locked");
-  avatarButton.textContent = "TL";
-  avatarButton.setAttribute("aria-label", "Commissioner profile");
-  document.querySelector("#platformBadge").textContent = "XB/PSN";
+  refreshIdentityUI();
   updateLoginGate();
   updateConnectionCards();
   renderDirectMessages();
@@ -1921,8 +2808,7 @@ function applyPreviewSessionFromUrl() {
   bottomNav.classList.remove("is-locked");
   sideMenu.classList.remove("is-locked");
   menuBackdrop.classList.remove("is-locked");
-  avatarButton.textContent = "XB";
-  avatarButton.setAttribute("aria-label", `${accountState.platform} verified profile`);
+  refreshIdentityUI();
   return true;
 }
 
@@ -2041,6 +2927,38 @@ function renderHistory() {
       `,
     )
     .join("");
+}
+
+function renderNotifications() {
+  const target = document.querySelector("#notificationList");
+  if (!target) return;
+  target.innerHTML = notifications.length
+    ? notifications
+        .slice(0, 4)
+        .map(
+          (notification) => `
+            <button class="notification-card ${notification.read ? "" : "unread"}" type="button" data-notification-action="${escapeHtml(notification.actionUrl)}">
+              <span>${notification.read ? "OK" : "NEW"}</span>
+              <div>
+                <strong>${escapeHtml(notification.title)}</strong>
+                <small>${escapeHtml(notification.message)}</small>
+              </div>
+            </button>
+          `,
+        )
+        .join("")
+    : `<article class="empty-state"><strong>No alerts right now</strong><small>Game check-ins, stat reviews, MMR updates, support replies, and payout holds appear here.</small></article>`;
+  target.querySelectorAll("[data-notification-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.notificationAction;
+      if (action?.startsWith("league:")) {
+        setTab("league");
+        window.setTimeout(() => setLeaguePanel(action.split(":")[1]), 80);
+      } else if (action) {
+        setTab(action);
+      }
+    });
+  });
 }
 
 function seedCheckinPlayers(teamName, confirmedCount = 0) {
@@ -2255,9 +3173,8 @@ function renderLeagueLockedGames() {
 
 function renderScoreResults() {
   const target = document.querySelector("#scoreResults");
-  if (!target) return;
-
-  target.innerHTML = gameResults
+  const leagueTarget = document.querySelector("#leagueScoresPanel");
+  const markup = gameResults
     .map(
       (result) => `
         <article class="score-result-card">
@@ -2284,6 +3201,8 @@ function renderScoreResults() {
       `,
     )
     .join("");
+  if (target) target.innerHTML = markup;
+  if (leagueTarget) leagueTarget.innerHTML = markup;
 }
 
 function renderTeamPage() {
@@ -2411,13 +3330,9 @@ function renderTeamStandings() {
               <div><strong>${team.team}</strong><small>${team.division}</small></div>
             </div>
           </td>
-          <td>${team.w}</td>
-          <td>${team.l}</td>
+          <td>${team.w}-${team.l}</td>
           <td>${standingsPct(team)}</td>
           <td>${gb}</td>
-          <td>${team.home}</td>
-          <td>${team.away}</td>
-          <td>${team.last10}</td>
           <td>${team.streak}</td>
           <td>${diff > 0 ? `+${diff}` : diff}</td>
         </tr>
@@ -2776,11 +3691,11 @@ function renderMovementDashboard() {
   const target = document.querySelector("#movementDashboard");
   const summary = document.querySelector("#adminMovementSummary");
   const sections = [
-    ["Auto-approved moves", "AUTO_APPROVED"],
-    ["Auto-denied moves", "AUTO_DENIED"],
-    ["Needs review", "NEEDS_REVIEW"],
-    ["Emergency review", "EMERGENCY_REVIEW"],
-    ["Admin overrides", "ADMIN_OVERRIDDEN"],
+    ["Review Queue", "NEEDS_REVIEW"],
+    ["Auto-Approved", "AUTO_APPROVED"],
+    ["Auto-Denied", "AUTO_DENIED"],
+    ["Emergency Review", "EMERGENCY_REVIEW"],
+    ["Overrides", "ADMIN_OVERRIDDEN"],
   ];
 
   if (summary) {
@@ -2790,15 +3705,30 @@ function renderMovementDashboard() {
   }
 
   if (!target) return;
-  target.innerHTML = [
-    ...sections.map(([label, status]) => {
+  target.innerHTML = `
+    <div class="movement-tabs" role="tablist" aria-label="Movement admin sections">
+      ${sections.map(([label, status], index) => `<button class="mini-tab ${index === 0 ? "active" : ""}" type="button" data-movement-tab="${status}">${label}</button>`).join("")}
+      <button class="mini-tab" type="button" data-movement-tab="HISTORY">History</button>
+    </div>
+    ${sections
+      .map(([label, status], index) => {
       const cards = movementStore.requests.filter((item) => item.status === status).map(renderMovementCard).join("");
-      return `<section class="movement-section"><h3>${label}</h3>${cards || `<article class="empty-state"><strong>No items</strong><small>${status} queue is clear.</small></article>`}</section>`;
-    }),
-    `<section class="movement-section"><h3>Movement history</h3>${movementStore.history
+      return `<section class="movement-section ${index === 0 ? "active" : ""}" data-movement-panel="${status}"><h3>${label}</h3>${cards || `<article class="empty-state"><strong>No items</strong><small>${status} queue is clear.</small></article>`}</section>`;
+    })
+      .join("")}
+    <section class="movement-section" data-movement-panel="HISTORY"><h3>Movement history</h3>${movementStore.history
       .map((item) => `<article class="history-card"><span>${escapeHtml(item.movementType)}</span><div><strong>${escapeHtml(item.originalDecision)} to ${escapeHtml(item.finalDecision)}</strong><small>${escapeHtml(item.movementId)} · ${item.reasons.map(escapeHtml).join("; ")}</small></div><b>${new Date(item.createdAt).toLocaleDateString()}</b></article>`)
-      .join("")}</section>`,
-  ].join("");
+      .join("") || `<article class="empty-state"><strong>No movement history</strong><small>Approvals, denials, and overrides are saved here.</small></article>`}</section>
+  `;
+
+  target.querySelectorAll("[data-movement-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      target.querySelectorAll("[data-movement-tab]").forEach((item) => item.classList.remove("active"));
+      target.querySelectorAll("[data-movement-panel]").forEach((panel) => panel.classList.remove("active"));
+      tab.classList.add("active");
+      target.querySelector(`[data-movement-panel="${tab.dataset.movementTab}"]`)?.classList.add("active");
+    });
+  });
 
   target.querySelectorAll("[data-movement-action]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -2868,6 +3798,47 @@ function renderJurisdictionRulesPanel() {
   }
 }
 
+function renderAdminDashboard() {
+  const target = document.querySelector("#adminDashboard");
+  if (!target) return;
+  const pendingReviews = statReviewStore.reviews.filter((review) => ["NEEDS_REVIEW", "OCR_COMPLETE", "OCR_LOW_CONFIDENCE"].includes(review.reviewStatus)).length;
+  const movementReview = movementStore.requests.filter((item) => ["NEEDS_REVIEW", "EMERGENCY_REVIEW"].includes(item.status)).length;
+  const supportOpen = supportTickets.filter((ticket) => ["Open", "In review", "In Review"].includes(ticket.status)).length;
+  const cards = [
+    ["Pending score reviews", pendingReviews, "Final screenshots waiting on approval", "scan"],
+    ["OCR stat reviews", pendingReviews, "MMR locked until approved", "scan"],
+    ["Registration verification", 2, "KYC and location checks", "admin"],
+    ["Payment issues", 3, "Registration or payout holds", "payments"],
+    ["Movement requests", movementReview, "Trades, waivers, releases", "movement"],
+    ["Support tickets", supportOpen, "User issues and bugs", "support"],
+    ["Integrity flags", 2, "Burner, conduct, or cheating checks", "admin"],
+    ["Payout holds", 1, "Eligibility or compliance hold", "payments"],
+  ];
+  target.innerHTML = cards
+    .map(
+      ([title, count, detail, tab]) => `
+        <button class="review-card" type="button" data-tab-target="${tab}">
+          <span>${count}</span>
+          <div><strong>${title}</strong><small>${detail}</small></div>
+        </button>
+      `,
+    )
+    .join("");
+  target.querySelectorAll("[data-tab-target]").forEach((button) => {
+    button.addEventListener("click", () => setTab(button.dataset.tabTarget));
+  });
+}
+
+function renderFinanceSummary() {
+  const summary = calculateLeagueFinanceSummary(96, 0);
+  const total = document.querySelector("#financeTotalCollected");
+  const prize = document.querySelector("#financePrizePool");
+  const deposit = document.querySelector("#financeDepositPool");
+  if (total) total.textContent = `$${summary.totalCollected.toLocaleString()}`;
+  if (prize) prize.textContent = `$${LeagueFinanceConfig.prizeExample.totalPrizePool.toLocaleString()} prize pool`;
+  if (deposit) deposit.textContent = `$${summary.depositPool.toLocaleString()} deposit pool`;
+}
+
 function freeAgentEntries() {
   const undrafted = draftProspects.filter((prospect) => !prospect.drafted).map((prospect) => ({ name: prospect.name, position: prospect.position, detail: `${prospect.build} · ${prospect.city}`, source: "Undrafted pool" }));
   const released = players.filter((player) => player.teamRole === "Free Agent").map((player) => ({ name: player.name, position: player.position, detail: `${player.tag} · ${player.ppg} PPG · ${player.identityStatus}`, source: "Released or unsigned" }));
@@ -2896,9 +3867,28 @@ function renderWaivers() {
 function renderMmrRankings() {
   const target = document.querySelector("#mmrRankings");
   if (!target) return;
-  const ranked = [...rankedPlayers].sort((first, second) => second.mmr - first.mmr);
+  const term = mmrSearch.trim().toLowerCase();
+  const currentTeam = selectedTeamName || "Shockers";
+  const ranked = [...rankedPlayers]
+    .filter((player) => {
+      if (mmrFilter === "my-team" && player.teamId !== currentTeam) return false;
+      if (["PG", "SG", "SF", "PF", "C"].includes(mmrFilter) && player.position !== mmrFilter) return false;
+      if (mmrFilter === "rising" && !String((player.recentForm || []).join("")).includes("W")) return false;
+      if (!term) return true;
+      return [player.name, player.gamertag, player.position, player.teamId, player.tier].some((value) => String(value).toLowerCase().includes(term));
+    })
+    .sort((first, second) => {
+      if (mmrSort === "reliability") return second.reliability - first.reliability;
+      if (mmrSort === "recentForm") return String(second.recentForm || "").localeCompare(String(first.recentForm || ""));
+      if (mmrSort === "winPct") {
+        const firstPct = first.wins / Math.max(1, first.wins + first.losses);
+        const secondPct = second.wins / Math.max(1, second.wins + second.losses);
+        return secondPct - firstPct;
+      }
+      return second.mmr - first.mmr;
+    });
   target.innerHTML = `
-    <div class="ranking-row head"><span>#</span><span>Player</span><span>MMR</span><span>Reliability</span></div>
+    <div class="ranking-row head"><span>#</span><span>Player</span><span>MMR</span><span>Trend</span></div>
     ${ranked
       .map(
         (player, index) => `
@@ -2906,11 +3896,11 @@ function renderMmrRankings() {
             <span>${index + 1}</span>
             <div><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.gamertag)} · ${escapeHtml(player.position)} · ${escapeHtml(player.teamId)}</small><em>${escapeHtml(player.tier)} · Draft ${escapeHtml(player.draftGrade)} · ${escapeHtml((player.recentForm || []).join(""))}</em></div>
             <strong>${player.mmr}</strong>
-            <small>${player.reliability}/100 · ${player.wins}-${player.losses}</small>
+            <small>${player.reliability}/100 · ${player.wins}-${player.losses} · ${player.mmr >= 1200 ? "Up" : "Watch"}</small>
           </article>
         `,
       )
-      .join("")}
+      .join("") || `<article class="empty-state"><strong>No rankings match</strong><small>Try a different position, team, or search term.</small></article>`}
   `;
 }
 
@@ -3036,7 +4026,6 @@ function updateRecordBooksFromResult() {
 
 function renderHistoryBooks() {
   const target = document.querySelector("#historyBooks");
-  if (!target) return;
   const draftResults = draftPicks.filter((pick) => pick.prospectId).map((pick) => ({ category: `Round ${pick.round} Pick ${pick.pick}`, player: draftProspects.find((item) => item.id === pick.prospectId)?.name || "Open", value: pick.team, detail: `Overall ${pick.overall}` }));
   const sections = [
     ["Draft results", recordBooks.draftResults.length ? recordBooks.draftResults : draftResults],
@@ -3044,9 +4033,16 @@ function renderHistoryBooks() {
     ["Team record book", recordBooks.teamRecords],
     ["Season highs", recordBooks.seasonHighs],
   ];
-  target.innerHTML = sections
+  const markup = sections
     .map(([title, records]) => `<section class="movement-section"><h3>${title}</h3>${records.map((record) => `<article class="history-card"><span>${escapeHtml(record.scope || record.team || "MCPA")}</span><div><strong>${escapeHtml(record.category)} · ${escapeHtml(record.player)}</strong><small>${escapeHtml(record.detail || record.team || "")}</small></div><b>${escapeHtml(record.value)}</b></article>`).join("") || `<article class="empty-state"><strong>No records yet</strong><small>Records update from draft and stat screenshot submissions.</small></article>`}</section>`)
     .join("");
+  if (target) target.innerHTML = markup;
+  const leagueTarget = document.querySelector("#leagueRecordsPanel");
+  if (leagueTarget) leagueTarget.innerHTML = markup;
+}
+
+function renderLeagueRecordPanel() {
+  renderHistoryBooks();
 }
 
 function renderLeagueRules() {
@@ -3340,11 +4336,11 @@ function sendMessage(event) {
     roomId: activeCommunityRoomId,
     senderId: "me",
     senderName: currentUserName(),
-    senderRole: accountState.role === "admin" ? "Staff" : "Player",
+    senderRole: isAdminRole() ? "Staff" : "Player",
     avatarInitials: initialsFromName(currentUserName()),
     text,
     createdAt: new Date().toISOString(),
-    isAdmin: accountState.role === "admin",
+    isAdmin: isAdminRole(),
   });
   input.value = "";
   window.clearTimeout(typingDebounceTimer);
@@ -3631,7 +4627,7 @@ function setChatMode(mode) {
   if (mode === "text") {
     window.setTimeout(scrollToBottom, 80);
   } else {
-    showToast("Voice rooms coming soon.");
+    showToast("Voice rooms are in demo mode until a real-time audio provider is connected.");
   }
 }
 
@@ -3712,7 +4708,7 @@ function renderVoiceStage() {
   }
 
   const joinedThisRoom = joinedVoiceRoomId === room.id;
-  const lockedForPlayer = room.locked && accountState.role !== "admin";
+  const lockedForPlayer = room.locked && !isAdminRole();
 
   if (roomName) {
     roomName.textContent = room.name;
@@ -3775,7 +4771,7 @@ function renderVoiceStage() {
               <button class="ghost-button" type="button" data-voice-vote="${memberName}">Vote out</button>
               <button class="ghost-button" type="button" data-voice-report="${memberName}">Report</button>
               ${
-                accountState.role === "admin"
+                isAdminRole()
                   ? `
                     <button class="ghost-button admin-action" type="button" data-voice-deafen="${memberName}" ${member.deafened ? "disabled" : ""}>Deafen</button>
                     <button class="ghost-button danger admin-action" type="button" data-voice-kick="${memberName}">Kick</button>
@@ -3826,7 +4822,7 @@ function joinVoiceRoom() {
   const room = activeVoiceRoom();
   if (!room) return;
 
-  if (room.locked && accountState.role !== "admin") {
+  if (room.locked && !isAdminRole()) {
     showToast("That room is locked. A team owner or staff member must grant access.");
     return;
   }
@@ -3841,7 +4837,7 @@ function joinVoiceRoom() {
   } else {
     room.members.push({
       name: userName,
-      role: accountState.role === "admin" ? "Staff" : "Player",
+      role: isAdminRole() ? "Staff" : "Player",
       initials: initialsFromName(userName),
       speaking: false,
       muted: micMuted,
@@ -3870,13 +4866,23 @@ function createVoiceRoom(event) {
     id: roomId,
     name: roomName,
     type: "Player-created",
+    roomType: "Private voice room",
+    createdBy: userName,
+    createdAt: new Date().toISOString(),
+    isLocked: false,
+    maxUsers: 10,
+    currentUsers: 1,
+    allowedTeamId: null,
+    gameId: null,
+    micRequired: false,
+    status: "DEMO_MODE",
     locked: false,
     topic: `Created by ${userName}. Invite players with @mentions in chat.`,
     lastActiveAt: Date.now(),
     members: [
       {
         name: userName,
-        role: accountState.role === "admin" ? "Staff host" : "Room host",
+        role: isAdminRole() ? "Staff host" : "Room host",
         initials: initialsFromName(userName),
         speaking: false,
         muted: micMuted,
@@ -3892,6 +4898,87 @@ function createVoiceRoom(event) {
   input.value = "";
   refreshVoiceUI();
   showToast(`${roomName} voice chat created.`);
+}
+
+function muteMic() {
+  if (!joinedVoiceRoomId) return false;
+  micMuted = true;
+  const room = joinedVoiceRoom();
+  const self = room?.members.find((member) => member.self || member.name === currentUserName());
+  if (self) self.muted = true;
+  refreshVoiceUI();
+  return true;
+}
+
+function unmuteMic() {
+  if (!joinedVoiceRoomId) return false;
+  micMuted = false;
+  const room = joinedVoiceRoom();
+  const self = room?.members.find((member) => member.self || member.name === currentUserName());
+  if (self) self.muted = false;
+  refreshVoiceUI();
+  return true;
+}
+
+function deafenAudio() {
+  if (!joinedVoiceRoomId) return false;
+  voiceDeafened = true;
+  const room = joinedVoiceRoom();
+  const self = room?.members.find((member) => member.self || member.name === currentUserName());
+  if (self) self.deafened = true;
+  refreshVoiceUI();
+  return true;
+}
+
+function undeafenAudio() {
+  if (!joinedVoiceRoomId) return false;
+  voiceDeafened = false;
+  const room = joinedVoiceRoom();
+  const self = room?.members.find((member) => member.self || member.name === currentUserName());
+  if (self) self.deafened = false;
+  refreshVoiceUI();
+  return true;
+}
+
+function listActiveVoiceRooms() {
+  cleanupVoiceRooms();
+  return voiceRooms.map((room) => ({
+    id: room.id,
+    name: room.name,
+    roomType: room.roomType || room.type,
+    status: room.status || (room.members.length ? "ACTIVE" : "EMPTY"),
+    currentUsers: room.members.length,
+    isLocked: Boolean(room.locked || room.isLocked),
+    demoMode: true,
+  }));
+}
+
+function closeVoiceRoom(roomId = activeVoiceRoomId) {
+  const room = voiceRooms.find((item) => item.id === roomId);
+  if (!room) return false;
+  room.members = [];
+  room.status = "CLOSED";
+  cleanupVoiceRooms();
+  refreshVoiceUI();
+  return true;
+}
+
+function kickUserFromVoiceRoom(roomId, userName) {
+  const room = voiceRooms.find((item) => item.id === roomId);
+  if (!room) return false;
+  room.members = room.members.filter((member) => member.name !== userName);
+  if (joinedVoiceRoomId === roomId && userName === currentUserName()) joinedVoiceRoomId = null;
+  refreshVoiceUI();
+  return true;
+}
+
+function updateVoiceRoomPresence(roomId = activeVoiceRoomId) {
+  const room = voiceRooms.find((item) => item.id === roomId);
+  if (!room) return null;
+  room.currentUsers = room.members.length;
+  room.status = room.members.length ? (room.status === "DEMO_MODE" ? "DEMO_MODE" : "ACTIVE") : "EMPTY";
+  touchVoiceRoom(room);
+  return room;
 }
 
 function leaveVoiceRoom() {
@@ -3975,7 +5062,7 @@ function reportVoiceMember(memberName) {
 }
 
 function adminDeafenMember(memberName) {
-  if (accountState.role !== "admin") {
+  if (!isAdminRole()) {
     showToast("Only staff can deafen members.");
     return;
   }
@@ -3991,7 +5078,7 @@ function adminDeafenMember(memberName) {
 }
 
 function adminKickMember(memberName) {
-  if (accountState.role !== "admin") {
+  if (!isAdminRole()) {
     showToast("Only staff can kick members.");
     return;
   }
@@ -4304,17 +5391,29 @@ function resetDraft() {
 }
 
 tabs.forEach((tab) => {
-  tab.addEventListener("click", () => setTab(tab.dataset.tab));
+  tab.addEventListener("click", () => {
+    setTab(tab.dataset.tab);
+    if (tab.dataset.leagueJump) {
+      window.setTimeout(() => setLeaguePanel(tab.dataset.leagueJump), 80);
+    }
+  });
 });
 
 shortcutButtons.forEach((button) => {
   button.addEventListener("click", () => setTab(button.dataset.tabTarget));
 });
 
+document.querySelectorAll("[data-league-panel-target]").forEach((button) => {
+  button.addEventListener("click", () => setLeaguePanel(button.dataset.leaguePanelTarget));
+});
+
 document.querySelectorAll("[data-login-platform]").forEach((button) => {
   button.addEventListener("click", () => {
-    accountState.platform = button.dataset.loginPlatform;
+    accountState.platform = normalizeConsoleName(button.dataset.loginPlatform);
+    const provider = accountState.platform === "PlayStation" ? PlayStationProvider : XboxProvider;
+    provider.connectAccount(accountState);
     updateLoginGate();
+    refreshIdentityUI();
     showToast(`${accountState.platform} connected. Display names will sync from the console account.`);
   });
 });
@@ -4323,6 +5422,7 @@ document.querySelectorAll("[data-required-connect]").forEach((button) => {
   button.addEventListener("click", () => {
     const connection = button.dataset.requiredConnect;
     accountState[connection] = true;
+    (connection === "discord" ? DiscordProvider : TwitchProvider).connectAccount(accountState);
     updateLoginGate();
     updateConnectionCards();
     showToast(`${connection === "discord" ? "Discord" : "Twitch"} connected and required for league access.`);
@@ -4335,7 +5435,7 @@ document.querySelectorAll("[data-login-role]").forEach((button) => {
     document.body.dataset.role = accountState.role;
     updateLoginGate();
     renderVoiceStage();
-    showToast(accountState.role === "admin" ? "Staff demo selected. Admin controls will unlock after required connections." : "Player view selected. Admin controls stay hidden.");
+    showToast(isAdminRole() ? "Staff controls will unlock after required connections." : accountState.role === "captain" ? "Captain tools selected. Team management stays limited." : "Player view selected. Admin controls stay hidden.");
   });
 });
 
@@ -4444,6 +5544,29 @@ document.querySelectorAll("[data-leader-position]").forEach((button) => {
   });
 });
 
+document.querySelector("#mmrSearch")?.addEventListener("input", (event) => {
+  mmrSearch = event.target.value;
+  renderMmrRankings();
+});
+
+document.querySelectorAll("[data-mmr-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-mmr-filter]").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    mmrFilter = button.dataset.mmrFilter;
+    renderMmrRankings();
+  });
+});
+
+document.querySelectorAll("[data-mmr-sort]").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-mmr-sort]").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    mmrSort = button.dataset.mmrSort;
+    renderMmrRankings();
+  });
+});
+
 document.querySelector("#shuffleSeeds").addEventListener("click", () => {
   bracketIndex = (bracketIndex + 1) % bracketSets.length;
   renderBracket();
@@ -4481,7 +5604,7 @@ document.querySelector("#createGameShortcut").addEventListener("click", () => {
 });
 
 document.querySelector("#addPlayerShortcut").addEventListener("click", () => {
-  if (accountState.role !== "admin") {
+  if (!isCaptainRole()) {
     setTab("support");
     document.querySelector("#ticketType").value = "Roster request";
     document.querySelector("#ticketSubject").value = "Request to add player";
@@ -4633,20 +5756,37 @@ document.querySelector("#statImage").addEventListener("change", (event) => {
   const [file] = event.target.files;
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.addEventListener("load", () => {
-    document.querySelector("#imagePreview").src = reader.result;
-    document.querySelector("#previewCard").classList.remove("hidden");
-    showToast("Screenshot loaded. Sample stat extraction is ready for review.");
-  });
-  reader.readAsDataURL(file);
+  uploadStatScreenshot("Game #42", file)
+    .then((upload) => {
+      document.querySelector("#imagePreview").src = upload.imageUrl;
+      document.querySelector("#previewCard").classList.remove("hidden");
+      showToast("Screenshot saved. OCR review created and MMR is locked until approval.");
+    })
+    .catch(() => showToast("Screenshot could not be processed. Try another image."));
 });
 
-document.querySelector("#applyStats").addEventListener("click", () => {
-  updateRecordBooksFromResult();
-  renderHistoryBooks();
-  renderPlayers();
-  showToast("Stats applied. Player averages, records, and profile accolades were updated.");
+document.querySelector("#approveStatReview")?.addEventListener("click", () => {
+  const review = currentStatReview();
+  if (!review) {
+    showToast("Upload a screenshot before approving stats.");
+    return;
+  }
+  approveStatReview(review.id, currentUserName());
+});
+
+document.querySelector("#rejectStatReview")?.addEventListener("click", () => {
+  const review = currentStatReview();
+  if (!review) return;
+  rejectStatReview(review.id, currentUserName(), "Rejected from admin review panel.");
+  showToast("Stat review rejected. A new screenshot can be requested.");
+});
+
+document.querySelector("#requestNewScreenshot")?.addEventListener("click", () => {
+  const review = currentStatReview();
+  if (review) review.reviewStatus = "NEEDS_REVIEW";
+  persistStatReviewStore();
+  renderStatReview(review?.id);
+  showToast("New screenshot requested. Review remains pending.");
 });
 
 function previewImage(input, callback) {
@@ -4872,8 +6012,11 @@ renderAwardCatalog();
 renderPolls("#awardPolls", awardPolls);
 renderPolls("#allStarPolls", allStarPolls);
 renderHistory();
+renderNotifications();
 renderMovementDashboard();
 renderJurisdictionRulesPanel();
+renderAdminDashboard();
+renderFinanceSummary();
 renderFreeAgency();
 renderWaivers();
 renderMmrRankings();
@@ -4881,6 +6024,8 @@ renderMatchResultForm();
 renderCup();
 renderLeagueBracketBoard();
 renderHistoryBooks();
+renderStatReview();
+setLeaguePanel("overview");
 renderChatRooms();
 renderMessages();
 updateLoginGate();
@@ -4897,6 +6042,49 @@ window.setInterval(() => {
 }, 60000);
 
 demoTypingTimer = window.setInterval(simulateDemoTyping, 14000);
+
+window.MCPA_BETA_API = {
+  CommissionerEngine,
+  XboxProvider,
+  PlayStationProvider,
+  TwitchProvider,
+  DiscordProvider,
+  getUserConsoleLabel,
+  getUserInitials,
+  getAvatarColor,
+  renderUserAvatar,
+  uploadStatScreenshot,
+  previewUploadedScreenshot,
+  runOcrOnScreenshot,
+  parseOcrTextToGameResult,
+  parseOcrTextToPlayerStats,
+  matchPlayerNamesToRoster,
+  validateGameScore,
+  validatePlayerStats,
+  calculateOcrConfidence,
+  createProvisionalResult,
+  autoFinalizeResultIfEligible,
+  reportWrongScreenshot,
+  updatePlayerStatsFromApprovedResult,
+  updateMmrFromApprovedResult,
+  updateCareerHighsFromApprovedResult,
+  updateAccoladesFromApprovedResult,
+  updateHistoryBooksFromApprovedResult,
+  updateStandingsFromApprovedResult,
+  createVoiceRoom,
+  joinVoiceRoom,
+  leaveVoiceRoom,
+  muteMic,
+  unmuteMic,
+  deafenAudio,
+  undeafenAudio,
+  listActiveVoiceRooms,
+  closeVoiceRoom,
+  kickUserFromVoiceRoom,
+  updateVoiceRoomPresence,
+  LeagueFinanceConfig,
+  calculateLeagueFinanceSummary,
+};
 
 if ("serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("./service-worker.js").catch(() => {});

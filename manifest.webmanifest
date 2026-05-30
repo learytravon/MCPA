@@ -1,7 +1,7 @@
 {
-  "name": "MCPA",
+  "name": "MCPA League",
   "short_name": "MCPA",
-  "description": "MCPA mobile league operations for seasons, tournaments, stats, payments, roles, and community rooms.",
+  "description": "MCPA League mobile operations for seasons, tournaments, stats, payments, roles, and community rooms.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#101010",

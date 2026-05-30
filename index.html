@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#070d16" />
-    <title>MCPA</title>
-    <link rel="manifest" href="./manifest.webmanifest?v=mcpa-chat-clean" />
+    <title>MCPA League</title>
+    <link rel="manifest" href="./manifest.webmanifest?v=mcpa-beta-ready" />
     <link rel="icon" href="./assets/mcpa-logo-square.png" type="image/png" />
     <link rel="apple-touch-icon" href="./assets/mcpa-logo-square.png" />
-    <link rel="stylesheet" href="./styles.css?v=mcpa-chat-clean" />
+    <link rel="stylesheet" href="./styles.css?v=mcpa-beta-ready" />
   </head>
   <body>
     <section class="login-screen" id="loginScreen" aria-labelledby="login-title">
@@ -115,10 +115,10 @@
             <strong>Continue with Xbox</strong>
             <small>Gamertag name sync</small>
           </button>
-          <button class="platform-login psn" type="button" data-login-platform="PSN">
+          <button class="platform-login psn" type="button" data-login-platform="PlayStation">
             <span>PS</span>
-            <strong>Continue with PSN</strong>
-            <small>PSN name sync</small>
+            <strong>Continue with PlayStation</strong>
+            <small>PlayStation name sync</small>
           </button>
         </div>
 
@@ -137,13 +137,15 @@
 
         <div class="login-role-choice" aria-label="Prototype account role">
           <button class="active" type="button" data-login-role="player">Player view</button>
-          <button type="button" data-login-role="admin">Staff demo</button>
+          <button type="button" data-login-role="captain">Captain</button>
+          <button type="button" data-login-role="staff">Staff</button>
+          <button type="button" data-login-role="admin">Admin</button>
         </div>
 
         <button class="solid-button full" id="enterApp" type="button" disabled>Connect required accounts</button>
 
         <div class="trust-summary" aria-label="Account protection checks">
-          <article><strong>Name Sync</strong><small>Xbox or PSN name updates the player name</small></article>
+          <article><strong>Name Sync</strong><small>Xbox or PlayStation name updates the player name</small></article>
           <article><strong>Burner Score</strong><small>Flags brand-new or matched accounts</small></article>
           <article><strong>Twitch Required</strong><small>Live status appears when players stream</small></article>
         </div>
@@ -166,32 +168,49 @@
         </div>
         <button class="menu-close" id="menuClose" type="button" aria-label="Close menu">Close</button>
       </div>
-      <button type="button" data-tab="home">Home</button>
-      <button type="button" data-tab="league">League</button>
-      <button type="button" data-tab="team">Team</button>
-      <button type="button" data-tab="schedule">Scheduling</button>
-      <button type="button" data-tab="scores">Scores</button>
-      <button type="button" data-tab="brackets">Brackets</button>
-      <button type="button" data-tab="rules">League Rules</button>
-      <button type="button" data-tab="free-agency">Free Agency</button>
-      <button type="button" data-tab="waivers">Waiver Wire</button>
-      <button type="button" data-tab="rankings">MMR Rankings</button>
-      <button type="button" data-tab="history">History</button>
-      <button class="admin-only" type="button" data-tab="movement">Movement Admin</button>
-      <button class="menu-dm-button" type="button" data-tab="messages">Direct Messages <span class="menu-badge" id="dmNotificationBadge" hidden>0</span></button>
-      <button type="button" data-tab="streams">Streams</button>
-      <button type="button" data-tab="players">Players</button>
-      <button type="button" data-tab="draft">Draft</button>
-      <button type="button" data-tab="tournaments">Events</button>
-      <button type="button" data-tab="awards">Awards</button>
-      <button type="button" data-tab="scan">Stat Scan</button>
-      <button type="button" data-tab="payments">Money</button>
-      <button class="admin-only" type="button" data-tab="admin">Admin</button>
-      <button type="button" data-tab="support">Support</button>
-      <button type="button" data-tab="chat">Chat</button>
+      <div class="menu-section">
+        <span class="menu-section-title">Player</span>
+        <button type="button" data-tab="home"><span class="menu-icon">H</span><span>Home</span></button>
+        <button type="button" data-tab="players"><span class="menu-icon">P</span><span>My Profile</span></button>
+        <button type="button" data-tab="team"><span class="menu-icon">T</span><span>My Team</span></button>
+        <button type="button" data-tab="draft"><span class="menu-icon">D</span><span>Draft Status</span><span class="menu-badge">Ready</span></button>
+        <button type="button" data-tab="free-agency"><span class="menu-icon">F</span><span>Free Agency</span></button>
+        <button type="button" data-tab="waivers"><span class="menu-icon">W</span><span>Waiver Wire</span></button>
+        <button type="button" data-tab="rankings"><span class="menu-icon">R</span><span>MMR Rankings</span></button>
+        <button type="button" data-tab="awards"><span class="menu-icon">A</span><span>Awards</span></button>
+      </div>
+      <div class="menu-section">
+        <span class="menu-section-title">League</span>
+        <button type="button" data-tab="league" data-league-jump="standings"><span class="menu-icon">S</span><span>Standings</span></button>
+        <button type="button" data-tab="league" data-league-jump="schedule"><span class="menu-icon">C</span><span>Schedule</span></button>
+        <button type="button" data-tab="league" data-league-jump="scores"><span class="menu-icon">F</span><span>Scores</span><span class="menu-badge">2</span></button>
+        <button type="button" data-tab="league" data-league-jump="brackets"><span class="menu-icon">B</span><span>Brackets</span></button>
+        <button type="button" data-tab="tournaments"><span class="menu-icon">L</span><span>League Cup</span></button>
+        <button type="button" data-tab="brackets"><span class="menu-icon">P</span><span>Playoffs</span></button>
+        <button type="button" data-tab="rules"><span class="menu-icon">R</span><span>League Rules</span></button>
+        <button type="button" data-tab="history"><span class="menu-icon">K</span><span>Record Book</span></button>
+      </div>
+      <div class="menu-section">
+        <span class="menu-section-title">Community</span>
+        <button type="button" data-tab="chat"><span class="menu-icon">C</span><span>Chat</span></button>
+        <button class="menu-dm-button" type="button" data-tab="messages"><span class="menu-icon">M</span><span>Direct Messages</span><span class="menu-badge" id="dmNotificationBadge" hidden>0</span></button>
+        <button type="button" data-tab="streams"><span class="menu-icon">TV</span><span>Streams</span></button>
+        <button type="button" data-tab="support"><span class="menu-icon">?</span><span>Support Tickets</span></button>
+      </div>
+      <div class="menu-section admin-only">
+        <span class="menu-section-title">Admin</span>
+        <button type="button" data-tab="admin"><span class="menu-icon">A</span><span>Admin Dashboard</span><span class="menu-badge">8</span></button>
+        <button type="button" data-tab="scan"><span class="menu-icon">M</span><span>Match Review</span><span class="menu-badge">2</span></button>
+        <button type="button" data-tab="scan"><span class="menu-icon">O</span><span>Stat OCR Review</span></button>
+        <button type="button" data-tab="movement"><span class="menu-icon">X</span><span>Movement Admin</span></button>
+        <button type="button" data-tab="payments"><span class="menu-icon">$</span><span>Payments</span></button>
+        <button type="button" data-tab="admin"><span class="menu-icon">V</span><span>Registration Review</span></button>
+        <button type="button" data-tab="support"><span class="menu-icon">Q</span><span>Support Queue</span></button>
+        <button type="button" data-tab="admin"><span class="menu-icon">G</span><span>Settings</span></button>
+      </div>
     </aside>
 
-    <main class="app-shell is-locked" aria-label="MCPA mobile app prototype">
+    <main class="app-shell is-locked" aria-label="MCPA League mobile app prototype">
       <header class="topbar">
         <button class="icon-button has-dot-anchor" id="menuToggle" type="button" title="Open menu" aria-label="Open menu" aria-expanded="false">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -202,14 +221,14 @@
         <div class="brand-lockup">
           <img src="./assets/mcpa-logo-square.png" alt="MCPA logo" />
           <div>
-            <p class="eyebrow">MCPA</p>
+            <p class="eyebrow" id="seasonLabel">Season: Summer Rec League</p>
             <div class="brand-title-row">
-              <h1>Summer Rec League</h1>
-              <span class="platform-badge" id="platformBadge">XB/PSN</span>
+              <h1>MCPA League</h1>
+              <span class="platform-badge" id="platformBadge">Connect Console</span>
             </div>
           </div>
         </div>
-        <button class="avatar-button" type="button" title="Commissioner profile" aria-label="Commissioner profile">TL</button>
+        <button class="avatar-button" type="button" title="Open profile" aria-label="Open profile">?</button>
       </header>
 
       <section class="screen active" id="screen-home" aria-labelledby="home-title">
@@ -282,6 +301,12 @@
           </article>
         </div>
 
+        <div class="section-heading compact">
+          <h2>My Tasks</h2>
+          <span class="sync-badge">Action needed</span>
+        </div>
+        <div class="notification-list" id="notificationList"></div>
+
         <div class="section-heading admin-only">
           <h2>Commissioner Queue</h2>
           <button class="text-button" type="button" data-tab-target="scan">Review stats</button>
@@ -331,7 +356,7 @@
             <span class="status-dot warn"></span>
             <div>
               <strong>2 burner-risk accounts flagged</strong>
-              <small>Xbox/PSN identity review required before roster access</small>
+              <small>Console identity review required before roster access</small>
             </div>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
           </button>
@@ -365,81 +390,145 @@
           </button>
         </div>
 
-        <div class="standings-kpis" aria-label="Standings summary">
-          <article>
-            <span>Top seed</span>
-            <strong id="topSeedName">Shockers</strong>
-            <small id="topSeedRecord">8-1 · .889</small>
-          </article>
-          <article>
-            <span>Playoff line</span>
-            <strong id="playoffLine">#8 cut line</strong>
-            <small>Top 8 enter postseason</small>
+        <div class="league-subtabs" role="tablist" aria-label="League sections">
+          <button class="mini-tab active" type="button" data-league-panel-target="overview">Overview</button>
+          <button class="mini-tab" type="button" data-league-panel-target="standings">Standings</button>
+          <button class="mini-tab" type="button" data-league-panel-target="schedule">Schedule</button>
+          <button class="mini-tab" type="button" data-league-panel-target="scores">Scores</button>
+          <button class="mini-tab" type="button" data-league-panel-target="brackets">Brackets</button>
+          <button class="mini-tab" type="button" data-league-panel-target="records">Records</button>
+        </div>
+
+        <div class="league-panel active" data-league-panel="overview">
+          <div class="league-overview-grid">
+            <article>
+              <span>Week status</span>
+              <strong>Week 4 live</strong>
+              <small>6 games this week, 2 score reviews pending</small>
+            </article>
+            <article>
+              <span>Next lock</span>
+              <strong>Friday 8:00 PM</strong>
+              <small>Shockers vs Sharks · Rec Center A</small>
+            </article>
+            <article>
+              <span>Prize pool</span>
+              <strong>$3.4K</strong>
+              <small>Paid registrations plus fine share</small>
+            </article>
+            <article>
+              <span>Last update</span>
+              <strong>After review</strong>
+              <small>Standings update after approved results</small>
+            </article>
+          </div>
+          <div class="league-hub-grid">
+            <button type="button" data-league-panel-target="standings"><strong>Standings</strong><small>Seeds, play-in line, streaks</small></button>
+            <button type="button" data-league-panel-target="schedule"><strong>Schedule</strong><small>Check-ins and locked games</small></button>
+            <button type="button" data-league-panel-target="scores"><strong>Scores</strong><small>Finals and review status</small></button>
+            <button type="button" data-league-panel-target="brackets"><strong>Brackets</strong><small>Playoffs and League Cup</small></button>
+            <button type="button" data-league-panel-target="records"><strong>Record Book</strong><small>Season highs and league records</small></button>
+          </div>
+        </div>
+
+        <div class="league-panel" data-league-panel="standings">
+          <div class="standings-kpis" aria-label="Standings summary">
+            <article>
+              <span>Top seed</span>
+              <strong id="topSeedName">Shockers</strong>
+              <small id="topSeedRecord">8-1 · .889</small>
+            </article>
+            <article>
+              <span>Playoff line</span>
+              <strong id="playoffLine">#8 cut line</strong>
+              <small>Top 8 enter postseason</small>
+            </article>
+          </div>
+
+          <div class="standings-tabs" role="tablist" aria-label="Team standings filters">
+            <button class="mini-tab active" type="button" data-standings-filter="all">All</button>
+            <button class="mini-tab" type="button" data-standings-filter="east">East</button>
+            <button class="mini-tab" type="button" data-standings-filter="west">West</button>
+            <button class="mini-tab" type="button" data-standings-filter="playoff">Playoff</button>
+          </div>
+
+          <div class="standings-table-wrap">
+            <table class="standings-table" aria-label="MCPA team standings">
+              <thead>
+                <tr>
+                  <th>Seed</th>
+                  <th>Team</th>
+                  <th>W-L</th>
+                  <th>PCT</th>
+                  <th>GB</th>
+                  <th>Strk</th>
+                  <th>Diff</th>
+                </tr>
+              </thead>
+              <tbody id="teamStandings"></tbody>
+            </table>
+          </div>
+
+          <div class="playoff-note">
+            <span class="seed-dot clinched"></span><strong>1-2</strong><small>Semifinal bye</small>
+            <span class="seed-dot round"></span><strong>3-4</strong><small>First round</small>
+            <span class="seed-dot bubble"></span><strong>5-8</strong><small>Play-in</small>
+          </div>
+          <p class="update-note">Updated after last approved result.</p>
+        </div>
+
+        <div class="league-panel" data-league-panel="schedule">
+          <div class="section-heading compact">
+            <h2>Locked Game Times</h2>
+            <button class="text-button" type="button" data-tab-target="schedule">Full Schedule</button>
+          </div>
+          <div class="schedule-stack compact-games" id="leagueLockedGames"></div>
+          <article class="empty-state" id="noLeagueGames" hidden>
+            <strong>No games are scheduled yet.</strong>
+            <small>Check back after the commissioner publishes the schedule.</small>
           </article>
         </div>
 
-        <div class="standings-tabs" role="tablist" aria-label="Team standings filters">
-          <button class="mini-tab active" type="button" data-standings-filter="all">All</button>
-          <button class="mini-tab" type="button" data-standings-filter="east">East</button>
-          <button class="mini-tab" type="button" data-standings-filter="west">West</button>
-          <button class="mini-tab" type="button" data-standings-filter="playoff">Playoff</button>
+        <div class="league-panel" data-league-panel="scores">
+          <div class="section-heading compact">
+            <h2>Recent Scores</h2>
+            <button class="text-button" type="button" data-tab-target="scan">Submit Screenshot</button>
+          </div>
+          <div class="score-list compact-scores" id="leagueScoresPanel"></div>
         </div>
 
-        <div class="standings-table-wrap">
-          <table class="standings-table" aria-label="MCPA team standings">
-            <thead>
-              <tr>
-                <th>Seed</th>
-                <th>Team</th>
-                <th>W</th>
-                <th>L</th>
-                <th>PCT</th>
-                <th>GB</th>
-                <th>Home</th>
-                <th>Away</th>
-                <th>L10</th>
-                <th>Strk</th>
-                <th>Diff</th>
-              </tr>
-            </thead>
-            <tbody id="teamStandings"></tbody>
-          </table>
+        <div class="league-panel" data-league-panel="brackets">
+          <div class="section-heading compact">
+            <h2>Playoff Picture</h2>
+            <button class="text-button" type="button" data-tab-target="brackets">Full Brackets</button>
+          </div>
+          <div class="playoff-picture" aria-label="Playoff and play-in structure">
+            <article>
+              <span>Semifinal byes</span>
+              <div id="playoffByes"></div>
+            </article>
+            <article>
+              <span>First round locks</span>
+              <div id="firstRoundSeeds"></div>
+            </article>
+            <article class="wide">
+              <span>Play-in tournament</span>
+              <div id="playInGames"></div>
+            </article>
+            <article class="wide">
+              <span>Main bracket</span>
+              <div id="mainBracketMatchups"></div>
+            </article>
+          </div>
         </div>
 
-        <div class="playoff-note">
-          <span class="seed-dot clinched"></span><strong>1-2</strong><small>Semifinal bye</small>
-          <span class="seed-dot round"></span><strong>3-4</strong><small>First round</small>
-          <span class="seed-dot bubble"></span><strong>5-8</strong><small>Play-in</small>
+        <div class="league-panel" data-league-panel="records">
+          <div class="section-heading compact">
+            <h2>Record Book</h2>
+            <button class="text-button" type="button" data-tab-target="history">Open History</button>
+          </div>
+          <div class="history-books compact-records" id="leagueRecordsPanel"></div>
         </div>
-
-        <div class="section-heading compact">
-          <h2>Playoff Picture</h2>
-          <button class="text-button" type="button" data-tab-target="brackets">Brackets</button>
-        </div>
-        <div class="playoff-picture" aria-label="Playoff and play-in structure">
-          <article>
-            <span>Semifinal byes</span>
-            <div id="playoffByes"></div>
-          </article>
-          <article>
-            <span>First round locks</span>
-            <div id="firstRoundSeeds"></div>
-          </article>
-          <article class="wide">
-            <span>Play-in tournament</span>
-            <div id="playInGames"></div>
-          </article>
-          <article class="wide">
-            <span>Main bracket</span>
-            <div id="mainBracketMatchups"></div>
-          </article>
-        </div>
-
-        <div class="section-heading compact">
-          <h2>Locked Game Times</h2>
-          <button class="text-button" type="button" data-tab-target="schedule">Schedule</button>
-        </div>
-        <div class="schedule-stack compact-games" id="leagueLockedGames"></div>
       </section>
 
       <section class="screen" id="screen-brackets" aria-labelledby="brackets-title">
@@ -796,32 +885,32 @@
           </div>
           <span class="sync-badge">Live table</span>
         </div>
+        <label class="search-box compact-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+          <input type="search" id="mmrSearch" placeholder="Search ranking, team, or gamertag" />
+        </label>
+        <div class="position-tabs mmr-filter-tabs" role="tablist" aria-label="MMR filters">
+          <button class="mini-tab active" type="button" data-mmr-filter="overall">Overall</button>
+          <button class="mini-tab" type="button" data-mmr-filter="PG">PG</button>
+          <button class="mini-tab" type="button" data-mmr-filter="SG">SG</button>
+          <button class="mini-tab" type="button" data-mmr-filter="SF">SF</button>
+          <button class="mini-tab" type="button" data-mmr-filter="PF">PF</button>
+          <button class="mini-tab" type="button" data-mmr-filter="C">C</button>
+          <button class="mini-tab" type="button" data-mmr-filter="my-team">My Team</button>
+          <button class="mini-tab" type="button" data-mmr-filter="rising">Rising</button>
+        </div>
+        <div class="position-tabs mmr-sort-tabs" role="tablist" aria-label="MMR sort">
+          <button class="mini-tab active" type="button" data-mmr-sort="mmr">MMR</button>
+          <button class="mini-tab" type="button" data-mmr-sort="reliability">Reliability</button>
+          <button class="mini-tab" type="button" data-mmr-sort="recentForm">Recent Form</button>
+          <button class="mini-tab" type="button" data-mmr-sort="winPct">Win %</button>
+        </div>
         <div class="rankings-table" id="mmrRankings"></div>
 
         <div class="host-panel admin-only">
-          <h2>Admin Match Result</h2>
-          <div class="split-fields">
-            <label>
-              Team A
-              <input id="mmrTeamA" type="text" value="Shockers" />
-            </label>
-            <label>
-              Team B
-              <input id="mmrTeamB" type="text" value="Sharks" />
-            </label>
-          </div>
-          <div class="split-fields">
-            <label>
-              Winning team
-              <input id="mmrWinner" type="text" value="Shockers" />
-            </label>
-            <label>
-              Behavior penalty
-              <input id="mmrBehaviorPenalty" type="number" value="0" min="0" max="25" />
-            </label>
-          </div>
-          <div class="match-stat-grid" id="matchPlayerStatsForm"></div>
-          <button class="solid-button full" id="submitMmrResult" type="button">Update MMR from result</button>
+          <h2>Admin Match Review</h2>
+          <small>Manual stat input moved to OCR/stat review. MMR updates after an approved screenshot review.</small>
+          <button class="solid-button full" type="button" data-tab-target="scan">Open Stat OCR Review</button>
         </div>
       </section>
 
@@ -923,7 +1012,7 @@
         </div>
 
         <figure class="score-example">
-          <img src="./sample-final-score.svg?v=mcpa-chat-clean" alt="Example final score screenshot submitted for stat review" />
+          <img src="./sample-final-score.svg?v=mcpa-beta-ready" alt="Example final score screenshot submitted for stat review" />
           <figcaption>Example of the final score screenshot players submit after a game.</figcaption>
         </figure>
 
@@ -938,21 +1027,35 @@
           <img id="imagePreview" alt="Uploaded stat screenshot preview" />
         </div>
 
-        <div class="pipeline">
-          <article class="done"><span></span><div><strong>Read image</strong><small>Scoreboard detected</small></div></article>
-          <article class="done"><span></span><div><strong>Match roster</strong><small>Gamertags linked</small></div></article>
-          <article><span></span><div><strong>Commissioner approval</strong><small>Waiting to publish</small></div></article>
+        <div class="ocr-status-card" id="ocrStatusCard">
+          <strong>MMR and standings update after system validation or resolved review.</strong>
+          <small id="ocrStatusText">Upload a final score screenshot to start stat review.</small>
         </div>
 
-        <div class="stat-table">
-          <div class="table-head">
-            <span>Player</span><span>PTS</span><span>REB</span><span>AST</span>
-          </div>
-          <div><span>DreLock</span><strong>31</strong><strong>6</strong><strong>9</strong></div>
-          <div><span>JCity</span><strong>24</strong><strong>3</strong><strong>11</strong></div>
-          <div><span>MaskOn</span><strong>19</strong><strong>12</strong><strong>4</strong></div>
+        <div class="pipeline" id="ocrPipeline">
+          <article><span></span><div><strong>No screenshot</strong><small>Upload required</small></div></article>
+          <article><span></span><div><strong>OCR pending</strong><small>Engine check</small></div></article>
+          <article><span></span><div><strong>System decision</strong><small>Auto-finalize or route appeal</small></div></article>
         </div>
-        <button class="solid-button full" id="applyStats" type="button">Apply stats and update records</button>
+
+        <div class="ocr-review-panel" id="ocrReviewPanel">
+          <div class="section-heading compact">
+            <h2>Pending Stat Review</h2>
+            <span class="sync-badge" id="ocrConfidenceBadge">No upload</span>
+          </div>
+          <div class="score-review-summary" id="ocrReviewSummary"></div>
+          <div class="ocr-warning-list" id="ocrValidationWarnings"></div>
+          <div class="ocr-review-table" id="ocrReviewTable"></div>
+          <details class="ocr-debug admin-only">
+            <summary>Raw OCR text</summary>
+            <pre id="ocrRawText">No OCR text yet.</pre>
+          </details>
+          <div class="admin-action-bar admin-only">
+            <button class="solid-button" id="approveStatReview" type="button">Approve and Update Records</button>
+            <button class="ghost-button danger" id="rejectStatReview" type="button">Reject</button>
+            <button class="ghost-button" id="requestNewScreenshot" type="button">Request New Screenshot</button>
+          </div>
+        </div>
       </section>
 
       <section class="screen" id="screen-payments" aria-labelledby="payments-title">
@@ -968,10 +1071,10 @@
 
         <div class="balance-card">
           <span>Collected this season</span>
-          <strong>$4,825</strong>
+          <strong id="financeTotalCollected">$4,800</strong>
           <div class="balance-row">
-            <small>$375 pending</small>
-            <small>$175 fines open</small>
+            <small id="financePrizePool">$1,850 prize pool</small>
+            <small id="financeDepositPool">$1,440 deposit pool</small>
           </div>
         </div>
 
@@ -1094,6 +1197,12 @@
           </div>
         </div>
 
+        <div class="section-heading compact">
+          <h2>Admin Dashboard</h2>
+          <span class="sync-badge">Review hub</span>
+        </div>
+        <div class="admin-dashboard-grid" id="adminDashboard"></div>
+
         <div class="role-grid">
           <article>
             <span>Commissioner</span>
@@ -1156,7 +1265,7 @@
           <article>
             <span>Verified</span>
             <strong>142</strong>
-            <small>Xbox/PSN accounts locked</small>
+            <small>Console accounts locked</small>
           </article>
           <article>
             <span>Review</span>
@@ -1248,7 +1357,7 @@
         <div class="host-panel identity-policy">
           <h2>New Account Rules</h2>
           <div class="safety-checklist">
-            <article><span></span><div><strong>Roster hold</strong><small>New accounts cannot join a team until Xbox/PSN identity clears.</small></div></article>
+            <article><span></span><div><strong>Roster hold</strong><small>New accounts cannot join a team until console identity clears.</small></div></article>
             <article><span></span><div><strong>Duplicate match</strong><small>Same console ID, payment profile, device pattern, or gamertag history is sent to staff.</small></div></article>
             <article><span></span><div><strong>Audit trail</strong><small>Approvals, denials, and staff overrides stay in the admin log.</small></div></article>
           </div>
@@ -1309,7 +1418,18 @@
           <h2>Open Ticket</h2>
           <label>
             Issue type
-            <input id="ticketType" type="text" value="Bug report" />
+            <select id="ticketType">
+              <option>Registration issue</option>
+              <option>Payment issue</option>
+              <option>Payout issue</option>
+              <option>Match result dispute</option>
+              <option>Stat correction</option>
+              <option>Cheating/integrity report</option>
+              <option>Account verification</option>
+              <option>Roster request</option>
+              <option selected>Bug report</option>
+              <option>Other</option>
+            </select>
           </label>
           <label>
             Subject
@@ -1318,6 +1438,10 @@
           <label>
             Details
             <textarea id="ticketDetails" placeholder="Add game number, team, payment, or account details"></textarea>
+          </label>
+          <label>
+            Optional attachment
+            <input id="ticketAttachment" type="file" accept="image/*,.pdf" />
           </label>
           <button class="solid-button full" id="submitTicket" type="button">Submit ticket</button>
         </div>
@@ -1435,10 +1559,10 @@
 
         <div class="chat-panel" data-chat-panel="voice">
           <article class="voice-placeholder">
-            <strong>Voice rooms coming soon.</strong>
-            <small>Text chat is ready now. Voice will return here with live room controls when the production voice layer is connected.</small>
+            <strong>Voice chat is running in demo mode.</strong>
+            <small>Real-time audio provider not connected. Room creation, presence, mute, deafen, join, leave, and staff moderation are testable.</small>
           </article>
-          <div class="voice-demo-hidden" aria-hidden="true">
+          <div class="voice-room-workspace">
             <form class="voice-create" id="voiceCreateForm">
               <input id="voiceRoomName" type="text" placeholder="Create a voice chat" />
               <button class="solid-button" type="submit">Create</button>
@@ -1552,7 +1676,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="./mmr.js?v=mcpa-chat-clean"></script>
-    <script src="./app.js?v=mcpa-chat-clean"></script>
+    <script src="./mmr.js?v=mcpa-beta-ready"></script>
+    <script src="./app.js?v=mcpa-beta-ready"></script>
   </body>
 </html>

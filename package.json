@@ -1,0 +1,12 @@
+{
+  "name": "mcpa-league-beta",
+  "version": "0.9.0-beta",
+  "private": true,
+  "description": "MCPA League mobile-first virtual basketball draft league beta prototype.",
+  "scripts": {
+    "test": "node tests/full-season-simulator.js --summary",
+    "test:e2e": "node tests/e2e-smoke.js",
+    "test:season": "node tests/full-season-simulator.js --summary",
+    "qa:full-season": "node tests/full-season-simulator.js --write-report"
+  }
+}
