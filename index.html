@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#070d16" />
     <title>MCPA</title>
-    <link rel="manifest" href="./manifest.webmanifest?v=mcpa-nav-tv" />
+    <link rel="manifest" href="./manifest.webmanifest?v=mcpa-chat-clean" />
     <link rel="icon" href="./assets/mcpa-logo-square.png" type="image/png" />
     <link rel="apple-touch-icon" href="./assets/mcpa-logo-square.png" />
-    <link rel="stylesheet" href="./styles.css?v=mcpa-nav-tv" />
+    <link rel="stylesheet" href="./styles.css?v=mcpa-chat-clean" />
   </head>
   <body>
     <section class="login-screen" id="loginScreen" aria-labelledby="login-title">
@@ -37,6 +37,12 @@
               <input id="signupAge" type="number" min="13" value="21" />
             </label>
             <label>
+              DOB
+              <input id="signupDob" type="date" value="2005-01-01" />
+            </label>
+          </div>
+          <div class="split-fields compact">
+            <label>
               Main position
               <select id="signupPosition">
                 <option>PG</option>
@@ -46,6 +52,17 @@
                 <option>C</option>
               </select>
             </label>
+            <label>
+              State
+              <select id="signupState" autocomplete="address-level1">
+                <option value="NC">NC</option>
+                <option value="SC">SC</option>
+                <option value="FL">FL</option>
+                <option value="GA">GA</option>
+                <option value="VA">VA</option>
+                <option value="AZ">AZ</option>
+              </select>
+            </label>
           </div>
           <div class="split-fields compact">
             <label>
@@ -53,9 +70,42 @@
               <input id="signupCity" type="text" value="Charlotte" autocomplete="address-level2" />
             </label>
             <label>
+              ZIP
+              <input id="signupZip" type="text" value="28202" inputmode="numeric" autocomplete="postal-code" />
+            </label>
+          </div>
+          <div class="split-fields compact">
+            <label>
               Player build
               <input id="signupBuild" type="text" value="2-Way Shot Creator" />
             </label>
+            <label>
+              KYC status
+              <select id="signupKyc">
+                <option value="PENDING">Pending</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="UNDER_REVIEW">Under review</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="eligibility-card" id="registrationEligibilityCard">
+          <div>
+            <span>Payout Eligibility</span>
+            <strong id="eligibilityStatusText">NEEDS_LOCATION_VERIFICATION</strong>
+            <small id="eligibilityMessageText">Location verification is required before entering paid competitions or receiving payouts.</small>
+          </div>
+          <div class="eligibility-grid">
+            <article><span>Stated state</span><strong id="eligibilityStatedState">NC</strong></article>
+            <article><span>Current location</span><strong id="eligibilityCurrentState">Not verified</strong></article>
+            <article><span>KYC</span><strong id="eligibilityKycStatus">Pending</strong></article>
+            <article><span>Mismatch</span><strong id="eligibilityMismatch">None</strong></article>
+          </div>
+          <p class="eligibility-warning" id="eligibilityWarning" hidden></p>
+          <div class="eligibility-actions">
+            <button class="ghost-button" id="verifyLocationButton" type="button">Verify Location</button>
+            <button class="ghost-button" id="startAppealButton" type="button" hidden>Start Appeal</button>
           </div>
         </div>
 
@@ -121,7 +171,13 @@
       <button type="button" data-tab="team">Team</button>
       <button type="button" data-tab="schedule">Scheduling</button>
       <button type="button" data-tab="scores">Scores</button>
+      <button type="button" data-tab="brackets">Brackets</button>
       <button type="button" data-tab="rules">League Rules</button>
+      <button type="button" data-tab="free-agency">Free Agency</button>
+      <button type="button" data-tab="waivers">Waiver Wire</button>
+      <button type="button" data-tab="rankings">MMR Rankings</button>
+      <button type="button" data-tab="history">History</button>
+      <button class="admin-only" type="button" data-tab="movement">Movement Admin</button>
       <button class="menu-dm-button" type="button" data-tab="messages">Direct Messages <span class="menu-badge" id="dmNotificationBadge" hidden>0</span></button>
       <button type="button" data-tab="streams">Streams</button>
       <button type="button" data-tab="players">Players</button>
@@ -147,7 +203,10 @@
           <img src="./assets/mcpa-logo-square.png" alt="MCPA logo" />
           <div>
             <p class="eyebrow">MCPA</p>
-            <h1>Summer Rec League</h1>
+            <div class="brand-title-row">
+              <h1>Summer Rec League</h1>
+              <span class="platform-badge" id="platformBadge">XB/PSN</span>
+            </div>
           </div>
         </div>
         <button class="avatar-button" type="button" title="Commissioner profile" aria-label="Commissioner profile">TL</button>
@@ -223,11 +282,11 @@
           </article>
         </div>
 
-        <div class="section-heading">
+        <div class="section-heading admin-only">
           <h2>Commissioner Queue</h2>
           <button class="text-button" type="button" data-tab-target="scan">Review stats</button>
         </div>
-        <div class="task-list">
+        <div class="task-list admin-only">
           <button class="task-card" type="button" data-tab-target="payments">
             <span class="status-dot warn"></span>
             <div>
@@ -355,7 +414,7 @@
 
         <div class="section-heading compact">
           <h2>Playoff Picture</h2>
-          <span class="sync-badge">6-team bracket</span>
+          <button class="text-button" type="button" data-tab-target="brackets">Brackets</button>
         </div>
         <div class="playoff-picture" aria-label="Playoff and play-in structure">
           <article>
@@ -383,21 +442,32 @@
         <div class="schedule-stack compact-games" id="leagueLockedGames"></div>
       </section>
 
+      <section class="screen" id="screen-brackets" aria-labelledby="brackets-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Postseason</p>
+            <h2 id="brackets-title">Brackets</h2>
+          </div>
+          <button class="text-button" type="button" data-tab-target="tournaments">League Cup</button>
+        </div>
+        <div class="bracket-center" id="leagueBracketBoard"></div>
+      </section>
+
       <section class="screen" id="screen-team" aria-labelledby="team-title">
         <div class="section-heading">
           <div>
             <p class="eyebrow">My Team</p>
             <h2 id="team-title">Shockers HQ</h2>
           </div>
-          <span class="sync-badge">Roster 6/8</span>
+          <span class="sync-badge" id="teamPageRosterBadge">Roster 6/8</span>
         </div>
 
         <article class="team-hub-card">
           <div class="team-hub-top">
             <span class="team-hub-logo" id="teamPageLogo"></span>
             <div>
-              <strong>Shockers</strong>
-              <small>8-1 · East #1 · Team Owner: DreLock</small>
+              <strong id="teamPageName">Shockers</strong>
+              <small id="teamPageMeta">8-1 · East #1 · Team Owner: DreLock</small>
             </div>
           </div>
           <div class="team-hub-actions">
@@ -407,10 +477,10 @@
         </article>
 
         <div class="quick-grid compact-grid" aria-label="Team summary">
-          <article><span>Record</span><strong>8-1</strong><small>4 game streak</small></article>
-          <article><span>Roster</span><strong>6/8</strong><small>2 slots open</small></article>
-          <article><span>Prize Share</span><strong>$860</strong><small>current team path</small></article>
-          <article><span>Next Game</span><strong>8:00</strong><small>Friday vs Sharks</small></article>
+          <article><span>Record</span><strong id="teamPageRecord">8-1</strong><small id="teamPageSeed">East #1</small></article>
+          <article><span>Roster</span><strong id="teamPageRosterCount">6/8</strong><small id="teamPageSlots">2 slots open</small></article>
+          <article><span>Prize Share</span><strong id="teamPagePrize">$860</strong><small>current team path</small></article>
+          <article><span>Next Game</span><strong id="teamPageNextTime">8:00</strong><small id="teamPageNextOpponent">Friday vs Sharks</small></article>
         </div>
 
         <div class="section-heading compact">
@@ -425,8 +495,7 @@
         </div>
         <div class="task-list compact-tasks">
           <article class="activity-card"><strong>Roster lock</strong><small>Lineup must be confirmed 45 minutes before tip.</small></article>
-          <article class="activity-card"><strong>Team chat</strong><small>Shockers private room has 3 players active.</small></article>
-          <article class="activity-card"><strong>Logo status</strong><small>Current court logo is approved for league play.</small></article>
+          <article class="activity-card"><strong>Team chat</strong><small id="teamPageChatActivity">Shockers private room has 3 players active.</small></article>
         </div>
       </section>
 
@@ -447,6 +516,12 @@
         </div>
 
         <div class="schedule-stack" id="scheduledGames"></div>
+
+        <div class="section-heading compact">
+          <h2>League Calendar</h2>
+          <span class="sync-badge">Events</span>
+        </div>
+        <div class="event-calendar" id="eventCalendar"></div>
 
         <div class="host-panel schedule-form">
           <h2>Request or Create Game</h2>
@@ -535,6 +610,42 @@
           <article><span>8</span><strong>Wave</strong><small>vs Fusion</small></article>
           <article><span>4</span><strong>Pride</strong><small>vs Hoyas</small></article>
           <article><span>5</span><strong>Kings</strong><small>vs Huskies</small></article>
+        </div>
+
+        <div class="cup-shell">
+          <div class="section-heading compact">
+            <h2>Midseason Cup</h2>
+            <button class="text-button admin-only" id="cupAutoResult" type="button">Submit demo result</button>
+          </div>
+          <div class="quick-grid compact-grid" id="cupDashboard"></div>
+
+          <div class="section-heading compact"><h2>Group Standings</h2><span class="sync-badge">3 groups</span></div>
+          <div class="cup-groups" id="cupGroupStandings"></div>
+
+          <div class="section-heading compact"><h2>Group Schedule</h2><span class="sync-badge">Counts in season</span></div>
+          <div class="schedule-stack compact-games" id="cupGroupSchedule"></div>
+
+          <div class="section-heading compact"><h2>Knockout Bracket</h2><button class="text-button admin-only" id="generateCupKnockout" type="button">Generate</button></div>
+          <div class="bracket cup-bracket" id="cupKnockoutBracket"></div>
+
+          <div class="section-heading compact"><h2>Cup Final</h2><span class="sync-badge" id="cupFinalStatus">Pending</span></div>
+          <div class="movement-list" id="cupFinalPanel"></div>
+
+          <div class="section-heading compact"><h2>Cup Stats & MVP Race</h2><span class="sync-badge">MMR weighted</span></div>
+          <div class="movement-list" id="cupStatsPanel"></div>
+
+          <div class="section-heading compact"><h2>Champion History</h2><span class="sync-badge">Archive</span></div>
+          <div class="history-list" id="cupChampionHistory"></div>
+
+          <div class="host-panel admin-only">
+            <h2>Admin Review Queue</h2>
+            <div class="movement-list" id="cupAdminReviewQueue"></div>
+          </div>
+
+          <div class="host-panel admin-only">
+            <h2>Override History</h2>
+            <div class="movement-list" id="cupOverrideHistory"></div>
+          </div>
         </div>
 
         <div class="host-panel">
@@ -677,6 +788,87 @@
         <div class="player-list" id="playerList"></div>
       </section>
 
+      <section class="screen" id="screen-rankings" aria-labelledby="rankings-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Competitive Rating</p>
+            <h2 id="rankings-title">MMR Rankings</h2>
+          </div>
+          <span class="sync-badge">Live table</span>
+        </div>
+        <div class="rankings-table" id="mmrRankings"></div>
+
+        <div class="host-panel admin-only">
+          <h2>Admin Match Result</h2>
+          <div class="split-fields">
+            <label>
+              Team A
+              <input id="mmrTeamA" type="text" value="Shockers" />
+            </label>
+            <label>
+              Team B
+              <input id="mmrTeamB" type="text" value="Sharks" />
+            </label>
+          </div>
+          <div class="split-fields">
+            <label>
+              Winning team
+              <input id="mmrWinner" type="text" value="Shockers" />
+            </label>
+            <label>
+              Behavior penalty
+              <input id="mmrBehaviorPenalty" type="number" value="0" min="0" max="25" />
+            </label>
+          </div>
+          <div class="match-stat-grid" id="matchPlayerStatsForm"></div>
+          <button class="solid-button full" id="submitMmrResult" type="button">Update MMR from result</button>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-free-agency" aria-labelledby="free-agency-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Player Movement</p>
+            <h2 id="free-agency-title">Free Agents</h2>
+          </div>
+          <span class="sync-badge" id="freeAgentCount">0 available</span>
+        </div>
+        <div class="movement-list" id="freeAgentPool"></div>
+      </section>
+
+      <section class="screen" id="screen-waivers" aria-labelledby="waivers-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Player Movement</p>
+            <h2 id="waivers-title">Waiver Wire</h2>
+          </div>
+          <span class="sync-badge">Claim order</span>
+        </div>
+        <div class="movement-list" id="waiverWire"></div>
+      </section>
+
+      <section class="screen admin-only" id="screen-movement" aria-labelledby="movement-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Automation</p>
+            <h2 id="movement-title">Movement Admin</h2>
+          </div>
+          <span class="sync-badge">Override log</span>
+        </div>
+        <div class="movement-admin-grid" id="movementDashboard"></div>
+      </section>
+
+      <section class="screen" id="screen-history" aria-labelledby="history-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Archives</p>
+            <h2 id="history-title">History & Record Books</h2>
+          </div>
+          <span class="sync-badge">League books</span>
+        </div>
+        <div class="history-books" id="historyBooks"></div>
+      </section>
+
       <section class="screen" id="screen-draft" aria-labelledby="draft-title">
         <div class="section-heading">
           <div>
@@ -698,7 +890,6 @@
         <div class="draft-actions admin-only">
           <button class="solid-button" id="startDraft" type="button">Start draft</button>
           <button class="ghost-button" id="makeDraftPick" type="button">Make pick</button>
-          <button class="ghost-button" id="pauseDraft" type="button">Pause</button>
         </div>
 
         <div class="draft-ticker" id="draftTicker">Registered players enter the draft pool after sign-up.</div>
@@ -732,7 +923,7 @@
         </div>
 
         <figure class="score-example">
-          <img src="./sample-final-score.svg?v=mcpa-nav-tv" alt="Example final score screenshot submitted for stat review" />
+          <img src="./sample-final-score.svg?v=mcpa-chat-clean" alt="Example final score screenshot submitted for stat review" />
           <figcaption>Example of the final score screenshot players submit after a game.</figcaption>
         </figure>
 
@@ -985,6 +1176,75 @@
         </div>
         <div class="identity-list" id="identityQueue"></div>
 
+        <div class="section-heading compact">
+          <h2>Movement Automation</h2>
+          <button class="text-button" type="button" data-tab-target="movement">Open queue</button>
+        </div>
+        <div class="movement-summary-grid" id="adminMovementSummary"></div>
+
+        <div class="section-heading compact">
+          <h2>Compliance Rules</h2>
+          <span class="sync-badge" id="jurisdictionVersion">2026-01</span>
+        </div>
+        <div class="host-panel compliance-panel">
+          <small>Restricted states are editable here for the prototype. Legal review is required before launch.</small>
+          <div class="split-fields compact">
+            <label>
+              State
+              <input id="jurisdictionStateInput" type="text" value="SC" maxlength="2" />
+            </label>
+            <label>
+              Rule
+              <select id="jurisdictionRuleInput">
+                <option value="ELIGIBLE">ELIGIBLE</option>
+                <option value="RESTRICTED">RESTRICTED</option>
+                <option value="FREE_PLAY_ONLY">FREE_PLAY_ONLY</option>
+                <option value="REVIEW_REQUIRED">REVIEW_REQUIRED</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            Notes / reason
+            <textarea id="jurisdictionReasonInput">Paid competition not available in this jurisdiction.</textarea>
+          </label>
+          <div class="payment-actions">
+            <button class="solid-button" id="saveJurisdictionRule" type="button">Save rule</button>
+            <button class="ghost-button danger" id="removeJurisdictionRule" type="button">Remove restricted state</button>
+          </div>
+          <div class="jurisdiction-rules-list" id="jurisdictionRulesList"></div>
+          <div class="section-heading compact"><h2>Rule Change History</h2><span class="sync-badge">Audit</span></div>
+          <div class="movement-list" id="jurisdictionHistoryList"></div>
+        </div>
+
+        <div class="host-panel eligibility-override-panel">
+          <h2>Eligibility Override</h2>
+          <div class="split-fields compact">
+            <label>
+              Player ID
+              <input id="eligibilityOverridePlayer" type="text" value="preview-player" />
+            </label>
+            <label>
+              Final status
+              <select id="eligibilityOverrideStatus">
+                <option value="ELIGIBLE">ELIGIBLE</option>
+                <option value="FREE_PLAY_ONLY">FREE_PLAY_ONLY</option>
+                <option value="RESTRICTED">RESTRICTED</option>
+                <option value="NEEDS_LOCATION_VERIFICATION">NEEDS_LOCATION_VERIFICATION</option>
+                <option value="NEEDS_MANUAL_REVIEW">NEEDS_MANUAL_REVIEW</option>
+                <option value="KYC_REQUIRED">KYC_REQUIRED</option>
+                <option value="UNDER_REVIEW">UNDER_REVIEW</option>
+                <option value="BLOCKED">BLOCKED</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            Override reason
+            <textarea id="eligibilityOverrideReason" placeholder="Required before override can be saved"></textarea>
+          </label>
+          <button class="solid-button full" id="saveEligibilityOverride" type="button">Save eligibility override</button>
+          <div class="movement-list" id="eligibilityOverrideHistory"></div>
+        </div>
+
         <div class="host-panel identity-policy">
           <h2>New Account Rules</h2>
           <div class="safety-checklist">
@@ -1135,68 +1395,96 @@
             <p class="eyebrow">Community</p>
             <h2 id="chat-title">Text Chat & Voice</h2>
           </div>
-          <button class="icon-button dark" id="startRoomShortcut" type="button" title="Start room" aria-label="Start room">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10M8 7l4-4 4 4M4 14v3a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-3" /></svg>
+          <button class="sync-badge room-count-pill" id="voiceRoomCount" type="button" aria-expanded="false">4 rooms</button>
+        </div>
+
+        <div class="chat-mode-tabs" role="tablist" aria-label="Chat mode">
+          <button class="mini-tab active" type="button" data-chat-mode="text" aria-label="Text chat">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>
+            <span>Text</span>
+          </button>
+          <button class="mini-tab" type="button" data-chat-mode="voice" aria-label="Voice chat">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM5 10v1a7 7 0 0 0 14 0v-1M12 18v4M8 22h8" /></svg>
+            <span>Voice</span>
           </button>
         </div>
 
-        <div class="section-heading compact">
-          <h2>Voice Rooms</h2>
-          <span class="sync-badge" id="voiceRoomCount">0 rooms</span>
-        </div>
-        <form class="voice-create" id="voiceCreateForm">
-          <input id="voiceRoomName" type="text" placeholder="Create a voice chat" />
-          <button class="solid-button" type="submit">Create</button>
-        </form>
-        <div class="room-list" id="voiceRoomList"></div>
-
-        <div class="voice-stage" id="voiceStage">
-          <div class="voice-stage-head">
-            <div>
-              <span class="pulse"></span>
-              <div>
-                <strong id="activeVoiceRoomName">Select a room</strong>
-                <small id="activeVoiceRoomMeta">Preview members before joining.</small>
-              </div>
+        <div class="chat-panel active" data-chat-panel="text">
+          <div class="chat-room-picker" id="chatRoomPicker" hidden></div>
+          <div class="chat-current-room" id="chatCurrentRoom">General</div>
+          <div class="chat-window" id="chatWindow" aria-live="polite"></div>
+          <div class="chat-dock">
+            <div class="typing-indicator" id="typingIndicator" hidden>
+              <span id="typingText">Travon Admin is typing</span>
+              <i></i><i></i><i></i>
             </div>
-            <button class="solid-button" id="joinVoiceRoom" type="button">Join</button>
+            <form class="chat-composer" id="composer">
+              <button class="chat-attach-button" id="chatAttachButton" type="button" title="Attach file" aria-label="Attach file">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l10-10a4 4 0 0 1 5.7 5.7l-9.5 9.5a2 2 0 0 1-2.8-2.8L16 5.8" /></svg>
+              </button>
+              <div class="composer-input-wrap">
+                <div class="mention-tray" id="leagueMentionTray" aria-label="League mention suggestions"></div>
+                <input type="text" id="chatInput" placeholder="Message the league or @tag a player" autocomplete="off" />
+              </div>
+              <button class="primary-icon" type="submit" title="Send message" aria-label="Send message">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z" /></svg>
+              </button>
+            </form>
           </div>
-
-          <div class="voice-controls">
-            <button class="ghost-button" id="toggleSpeaker" type="button">Speaker on</button>
-            <button class="ghost-button" id="toggleMic" type="button">Mute mic</button>
-            <button class="ghost-button danger" id="leaveVoiceRoom" type="button">Leave</button>
-          </div>
-
-          <div class="voice-participants" id="voiceParticipants"></div>
         </div>
 
-        <div class="chat-window" id="chatWindow">
-          <article class="message">
-            <span>Commish</span>
-            <p>Week 4 games lock at 7:45. Captains, confirm your five.</p>
+        <div class="chat-panel" data-chat-panel="voice">
+          <article class="voice-placeholder">
+            <strong>Voice rooms coming soon.</strong>
+            <small>Text chat is ready now. Voice will return here with live room controls when the production voice layer is connected.</small>
           </article>
-          <article class="message mine">
-            <span>Shockers</span>
-            <p>Roster is confirmed. Screenshot after Game 1.</p>
-          </article>
-          <article class="message">
-            <span>Rage</span>
-            <p>Can we move Court 2 back fifteen minutes?</p>
-          </article>
-        </div>
-        <form class="composer" id="composer">
-          <div class="composer-input-wrap">
-            <div class="mention-tray" id="leagueMentionTray" aria-label="League mention suggestions"></div>
-            <input type="text" id="chatInput" placeholder="Message the league or @tag a player" />
+          <div class="voice-demo-hidden" aria-hidden="true">
+            <form class="voice-create" id="voiceCreateForm">
+              <input id="voiceRoomName" type="text" placeholder="Create a voice chat" />
+              <button class="solid-button" type="submit">Create</button>
+            </form>
+            <div class="room-list" id="voiceRoomList"></div>
+
+            <div class="voice-stage" id="voiceStage">
+              <div class="voice-stage-head">
+                <div>
+                  <span class="pulse"></span>
+                  <div>
+                    <strong id="activeVoiceRoomName">Select a room</strong>
+                    <small id="activeVoiceRoomMeta">Preview members before joining.</small>
+                  </div>
+                </div>
+                <button class="solid-button" id="joinVoiceRoom" type="button">Join</button>
+              </div>
+
+              <div class="voice-controls">
+                <button class="ghost-button" id="toggleVoiceOutput" type="button">Speaker</button>
+                <button class="ghost-button" id="toggleDeafen" type="button">Deafen</button>
+                <button class="ghost-button" id="toggleMic" type="button">Mute mic</button>
+                <button class="ghost-button danger" id="leaveVoiceRoom" type="button">Leave</button>
+              </div>
+
+              <div class="voice-participants" id="voiceParticipants"></div>
+            </div>
           </div>
-          <button class="primary-icon" type="submit" title="Send message" aria-label="Send message">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7Z" /></svg>
-          </button>
-        </form>
+        </div>
 
       </section>
     </main>
+
+    <div class="voice-mini-bar is-hidden" id="voiceMiniBar" aria-live="polite">
+      <span class="pulse"></span>
+      <div>
+        <strong id="miniVoiceRoom">Voice connected</strong>
+        <small id="miniVoiceState">Mic live · Speaker</small>
+      </div>
+      <button class="icon-button dark" id="miniToggleMic" type="button" title="Mute mic" aria-label="Mute mic">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM5 10v1a7 7 0 0 0 14 0v-1M12 18v4M8 22h8" /></svg>
+      </button>
+      <button class="icon-button dark" id="miniToggleDeafen" type="button" title="Deafen" aria-label="Deafen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14a9 9 0 0 1 18 0M5 14v5a2 2 0 0 0 2 2h1v-8H7a2 2 0 0 0-2 2ZM19 14v5a2 2 0 0 1-2 2h-1v-8h1a2 2 0 0 1 2 2Z" /></svg>
+      </button>
+    </div>
 
     <nav class="bottom-nav is-locked" aria-label="Main navigation">
       <button class="nav-item active" type="button" data-tab="home" aria-label="Home">
@@ -1264,6 +1552,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="./app.js?v=mcpa-nav-tv"></script>
+    <script src="./mmr.js?v=mcpa-chat-clean"></script>
+    <script src="./app.js?v=mcpa-chat-clean"></script>
   </body>
 </html>

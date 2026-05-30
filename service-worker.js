@@ -1,8 +1,9 @@
-const CACHE_NAME = "mcpa-prototype-v25";
+const CACHE_NAME = "mcpa-prototype-v29";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
+  "./mmr.js",
   "./app.js",
   "./manifest.webmanifest",
   "./assets/mcpa-logo-full.png",
