@@ -449,6 +449,15 @@ const scheduledGames = [
   },
 ];
 
+const calendarEvents = [
+  { date: "Jun 1", label: "Draft night", detail: "Captains enter the draft room and the 1-minute pick clock starts.", type: "Draft" },
+  { date: "Jun 3", label: "Season tip-off", detail: "Opening week games and required check-ins begin.", type: "Season" },
+  { date: "Jun 10", label: "Free agency opens", detail: "Released players can sign after the 24-hour waiting period.", type: "Roster" },
+  { date: "Jun 17", label: "Trade deadline", detail: "All trades require admin approval before midnight.", type: "Deadline" },
+  { date: "Jun 24", label: "All-Star voting closes", detail: "Final poll totals lock and selections move to history.", type: "Awards" },
+  { date: "Jul 1", label: "Play-in tournament", detail: "Seeds 5-8 compete for the final two playoff spots.", type: "Playoffs" },
+];
+
 const gameResults = [
   { id: "r42", label: "MCPA Final", game: "Week 4 Rec Center A", home: "Shockers", away: "Rage", homeScore: 84, awayScore: 77, winner: "Shockers", submitted: "10:18 PM" },
   { id: "r41", label: "Final", game: "Week 4 Pro-Am Court 1", home: "Sharks", away: "Pride", homeScore: 79, awayScore: 74, winner: "Sharks", submitted: "9:44 PM" },
@@ -538,6 +547,119 @@ const voiceRooms = [
       { name: "MaskOn", role: "Captain", initials: "MO", speaking: false, muted: false, deafened: false, votes: 0 },
       { name: "QuickIso23", role: "Review hold", initials: "QI", speaking: false, muted: false, deafened: false, votes: 0 },
     ],
+  },
+];
+
+const rooms = [
+  { id: "general", name: "General", unreadCount: 0 },
+  { id: "announcements", name: "Announcements", unreadCount: 1 },
+  { id: "game-day", name: "Game Day", unreadCount: 0 },
+  { id: "support", name: "Support", unreadCount: 0 },
+];
+
+function chatTimestamp(minutesAgo) {
+  return new Date(Date.now() - minutesAgo * 60 * 1000).toISOString();
+}
+
+const demoCommunityMessages = [
+  {
+    id: "msg-admin-welcome",
+    roomId: "general",
+    senderId: "admin-travon",
+    senderName: "Travon Admin",
+    senderRole: "Commissioner",
+    avatarInitials: "TA",
+    text: "Welcome to the Summer Rec League chat! Share updates, ask questions, and stay locked in.",
+    createdAt: chatTimestamp(34),
+    isAdmin: true,
+  },
+  {
+    id: "msg-admin-reminder",
+    roomId: "general",
+    senderId: "admin-travon",
+    senderName: "Travon Admin",
+    senderRole: "Commissioner",
+    avatarInitials: "TA",
+    text: "Reminder: Games start next week. Check the schedule in the League tab.",
+    createdAt: chatTimestamp(28),
+    isAdmin: true,
+  },
+  {
+    id: "msg-admin-practice",
+    roomId: "general",
+    senderId: "admin-travon",
+    senderName: "Travon Admin",
+    senderRole: "Commissioner",
+    avatarInitials: "TA",
+    text: "Practice this Thursday at 6PM. Bring light and dark jerseys.",
+    createdAt: chatTimestamp(23),
+    isAdmin: true,
+  },
+  {
+    id: "msg-alex",
+    roomId: "general",
+    senderId: "user-alex",
+    senderName: "Alex Johnson",
+    senderRole: "Player",
+    avatarInitials: "AJ",
+    text: "Got it, appreciate the heads up!",
+    createdAt: chatTimestamp(16),
+    isAdmin: false,
+  },
+  {
+    id: "msg-mike",
+    roomId: "general",
+    senderId: "user-mike",
+    senderName: "Mike Rodriguez",
+    senderRole: "Player",
+    avatarInitials: "MR",
+    text: "Anyone know if we're playing on Court 2 this weekend?",
+    createdAt: chatTimestamp(11),
+    isAdmin: false,
+  },
+  {
+    id: "msg-sara",
+    roomId: "general",
+    senderId: "user-sara",
+    senderName: "Sara Kim",
+    senderRole: "Player",
+    avatarInitials: "SK",
+    text: "Yep! Court 2 at 11AM.",
+    createdAt: chatTimestamp(7),
+    isAdmin: false,
+  },
+  {
+    id: "msg-announcement",
+    roomId: "announcements",
+    senderId: "admin-travon",
+    senderName: "Travon Admin",
+    senderRole: "Commissioner",
+    avatarInitials: "TA",
+    text: "Registration locks Sunday night. Captains should check roster payments before the draft pool closes.",
+    createdAt: chatTimestamp(48),
+    isAdmin: true,
+  },
+  {
+    id: "msg-game-day",
+    roomId: "game-day",
+    senderId: "admin-travon",
+    senderName: "Travon Admin",
+    senderRole: "Commissioner",
+    avatarInitials: "TA",
+    text: "Post check-in questions here on game day so staff can answer fast.",
+    createdAt: chatTimestamp(56),
+    isAdmin: true,
+  },
+  {
+    id: "msg-support",
+    roomId: "support",
+    senderId: "admin-travon",
+    senderName: "Travon Admin",
+    senderRole: "Commissioner",
+    avatarInitials: "TA",
+    text: "For disputes or bugs, open a ticket too. This room is for quick help only.",
+    createdAt: chatTimestamp(63),
+    isAdmin: true,
   },
 ];
 
@@ -789,6 +911,14 @@ let rosterPaymentChoice = "owner";
 let historyFilter = "all";
 let scheduleFilter = "all";
 let standingsFilter = "all";
+let selectedTeamName = "Shockers";
+let chatMode = "text";
+let activeCommunityRoomId = readStore("mcpaActiveCommunityRoom", "general");
+let communityMessages = readStore("mcpaCommunityMessages", demoCommunityMessages);
+let typingUsers = readStore("mcpaTypingUsers", []);
+let typingClearTimer = null;
+let typingDebounceTimer = null;
+let demoTypingTimer = null;
 let userVotes = {};
 let draftPicks = createDraftOrder();
 let currentDraftPickIndex = 0;
@@ -799,9 +929,23 @@ let draftRunning = false;
 let activeVoiceRoomId = "community";
 let joinedVoiceRoomId = null;
 let micMuted = false;
-let speakerOn = true;
+let voiceOutput = "speaker";
+let voiceDeafened = false;
 let activeDmId = directThreads[0]?.id || null;
 let dmNotificationPing = directThreads.some((thread) => thread.unread);
+const voiceInactiveLimit = 30 * 60 * 1000;
+
+function readStore(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "null") ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStore(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
 
 try {
   userVotes = JSON.parse(localStorage.getItem("mcpaUserVotes") || "{}");
@@ -818,14 +962,650 @@ function escapeHtml(value) {
   });
 }
 
+const eligibilityStatuses = ["ELIGIBLE", "FREE_PLAY_ONLY", "RESTRICTED", "NEEDS_LOCATION_VERIFICATION", "NEEDS_MANUAL_REVIEW", "KYC_REQUIRED", "UNDER_REVIEW", "BLOCKED"];
+
+// Restricted states are placeholder defaults and must be reviewed by legal counsel before launch. This list should be editable by an admin/compliance user.
+const defaultJurisdictionRules = {
+  version: "2026-01",
+  lastReviewedAt: null,
+  reviewedBy: null,
+  defaultRule: "ELIGIBLE",
+  states: Object.fromEntries(
+    ["AZ", "AR", "CT", "DE", "FL", "IN", "LA", "MD", "MT", "SC", "SD", "TN", "WY"].map((state) => [
+      state,
+      {
+        payoutEligibility: "RESTRICTED",
+        cashCompetitionEligibility: "RESTRICTED",
+        freePlayAllowed: true,
+        reason: "Paid competition not available in this jurisdiction.",
+        requiresManualReview: false,
+        lastUpdatedAt: null,
+        updatedBy: null,
+      },
+    ]),
+  ),
+};
+
+let jurisdictionRules = readStore("mcpaJurisdictionRules", defaultJurisdictionRules);
+let jurisdictionRuleHistory = readStore("mcpaJurisdictionRuleHistory", []);
+let eligibilityOverrideHistory = readStore("mcpaEligibilityOverrideHistory", []);
+let registrationLocationVerification = readStore("mcpaRegistrationLocation", {
+  statedCity: "Charlotte",
+  statedState: "NC",
+  statedZip: "28202",
+  currentState: "",
+  currentCountry: "US",
+  currentLatitude: null,
+  currentLongitude: null,
+  ipState: "NC",
+  ipCountry: "US",
+  locationPermissionGranted: false,
+  locationVerifiedAt: null,
+  locationMismatch: false,
+  vpnOrProxyDetected: false,
+  eligibilityStatus: "NEEDS_LOCATION_VERIFICATION",
+  eligibilityReason: "Location verification is required before entering paid competitions or receiving payouts.",
+});
+
+function persistJurisdictionRules() {
+  writeStore("mcpaJurisdictionRules", jurisdictionRules);
+  writeStore("mcpaJurisdictionRuleHistory", jurisdictionRuleHistory);
+}
+
+function persistEligibilityOverrides() {
+  writeStore("mcpaEligibilityOverrideHistory", eligibilityOverrideHistory);
+}
+
+function normalizeState(state) {
+  return String(state || "").trim().toUpperCase().slice(0, 2);
+}
+
+function calculateAgeFromDob(dob) {
+  if (!dob) return Number(document.querySelector("#signupAge")?.value || 0);
+  const birthDate = new Date(dob);
+  if (Number.isNaN(birthDate.getTime())) return Number(document.querySelector("#signupAge")?.value || 0);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthOffset = today.getMonth() - birthDate.getMonth();
+  if (monthOffset < 0 || (monthOffset === 0 && today.getDate() < birthDate.getDate())) age -= 1;
+  return age;
+}
+
+function getJurisdictionRule(state, rules = jurisdictionRules) {
+  const normalized = normalizeState(state);
+  return (
+    rules.states[normalized] || {
+      payoutEligibility: rules.defaultRule,
+      cashCompetitionEligibility: rules.defaultRule,
+      freePlayAllowed: true,
+      reason: "No restriction configured for this jurisdiction.",
+      requiresManualReview: false,
+    }
+  );
+}
+
+function compareStatedLocationToCurrentLocation(playerRegistration) {
+  const location = playerRegistration.locationVerification || {};
+  return {
+    statedState: normalizeState(location.statedState),
+    currentState: normalizeState(location.currentState),
+    statedCountry: "US",
+    currentCountry: String(location.currentCountry || "US").toUpperCase(),
+  };
+}
+
+function detectLocationMismatch(playerRegistration) {
+  const comparison = compareStatedLocationToCurrentLocation(playerRegistration);
+  if (!comparison.currentState) return false;
+  return comparison.statedState !== comparison.currentState || comparison.currentCountry !== "US";
+}
+
+function getEligibilityMessage(eligibilityStatus) {
+  const messages = {
+    ELIGIBLE: "Your location appears eligible for paid competition, subject to final verification.",
+    FREE_PLAY_ONLY: "Paid contests and payouts are not available in your current jurisdiction. You may still use free-play features if supported.",
+    NEEDS_LOCATION_VERIFICATION: "Location verification is required before entering paid competitions or receiving payouts.",
+    NEEDS_MANUAL_REVIEW: "Your eligibility requires manual review before cash competition or payout access can be enabled.",
+    KYC_REQUIRED: "Identity verification is required before payouts can be released.",
+    RESTRICTED: "Paid competition and payouts are not available for your account based on your current jurisdiction or eligibility status.",
+    UNDER_REVIEW: "Your payout eligibility is under review by league staff.",
+    BLOCKED: "Paid competition and payouts are blocked for this account.",
+  };
+  return messages[eligibilityStatus] || messages.NEEDS_MANUAL_REVIEW;
+}
+
+function buildEligibilityResult(status, reason, extra = {}) {
+  return {
+    eligibilityStatus: status,
+    eligibilityReason: reason || getEligibilityMessage(status),
+    ...extra,
+  };
+}
+
+function checkCashCompetitionEligibility(playerRegistration, rules = jurisdictionRules) {
+  const location = playerRegistration.locationVerification || {};
+  const age = playerRegistration.age || calculateAgeFromDob(playerRegistration.dob);
+  const currentRule = getJurisdictionRule(location.currentState, rules);
+  const statedRule = getJurisdictionRule(location.statedState, rules);
+  const locationMismatch = detectLocationMismatch(playerRegistration);
+
+  if (age < 18) return buildEligibilityResult("RESTRICTED", "Player is under 18.");
+  if (!location.locationPermissionGranted || !location.currentState) return buildEligibilityResult("NEEDS_LOCATION_VERIFICATION");
+  if (locationMismatch) return buildEligibilityResult("NEEDS_MANUAL_REVIEW", "Stated home state and verified current location do not match.", { locationMismatch: true });
+  if (location.vpnOrProxyDetected) return buildEligibilityResult("NEEDS_MANUAL_REVIEW", "VPN, proxy, or Tor risk requires manual review.");
+  if (currentRule.requiresManualReview || currentRule.cashCompetitionEligibility === "REVIEW_REQUIRED") return buildEligibilityResult("NEEDS_MANUAL_REVIEW", currentRule.reason);
+  if (currentRule.cashCompetitionEligibility === "RESTRICTED") return buildEligibilityResult(currentRule.freePlayAllowed ? "FREE_PLAY_ONLY" : "RESTRICTED", currentRule.reason);
+  if (statedRule.cashCompetitionEligibility === "RESTRICTED") return buildEligibilityResult(statedRule.freePlayAllowed ? "FREE_PLAY_ONLY" : "RESTRICTED", statedRule.reason);
+  return buildEligibilityResult("ELIGIBLE");
+}
+
+function checkPayoutEligibility(playerRegistration, rules = jurisdictionRules) {
+  const location = playerRegistration.locationVerification || {};
+  const age = playerRegistration.age || calculateAgeFromDob(playerRegistration.dob);
+  const currentRule = getJurisdictionRule(location.currentState, rules);
+  const statedRule = getJurisdictionRule(location.statedState, rules);
+  const locationMismatch = detectLocationMismatch(playerRegistration);
+
+  if (age < 18) return buildEligibilityResult("RESTRICTED", "Player is under 18.");
+  if (!location.locationPermissionGranted || !location.currentState) return buildEligibilityResult("NEEDS_LOCATION_VERIFICATION");
+  if (locationMismatch) return buildEligibilityResult("NEEDS_MANUAL_REVIEW", "Stated home state and verified current location do not match.", { locationMismatch: true });
+  if (location.vpnOrProxyDetected) return buildEligibilityResult("NEEDS_MANUAL_REVIEW", "VPN, proxy, or Tor risk requires manual review.");
+  if (currentRule.payoutEligibility === "RESTRICTED") return buildEligibilityResult(currentRule.freePlayAllowed ? "FREE_PLAY_ONLY" : "RESTRICTED", currentRule.reason);
+  if (statedRule.payoutEligibility === "RESTRICTED") return buildEligibilityResult(statedRule.freePlayAllowed ? "FREE_PLAY_ONLY" : "RESTRICTED", statedRule.reason);
+  if (playerRegistration.kycStatus !== "VERIFIED") return buildEligibilityResult("KYC_REQUIRED");
+  return buildEligibilityResult("ELIGIBLE");
+}
+
+function logJurisdictionRuleChange(state, oldRule, newRule, adminId) {
+  jurisdictionRuleHistory.unshift({
+    id: `jur-${Date.now()}`,
+    state: normalizeState(state),
+    oldRule,
+    newRule,
+    adminId,
+    timestamp: new Date().toISOString(),
+  });
+  jurisdictionRuleHistory = jurisdictionRuleHistory.slice(0, 50);
+  persistJurisdictionRules();
+}
+
+function updateJurisdictionRule(state, rule, adminId) {
+  const normalized = normalizeState(state);
+  if (!normalized) return null;
+  const oldRule = jurisdictionRules.states[normalized] || null;
+  const newRule = {
+    payoutEligibility: rule.payoutEligibility || rule.status || "RESTRICTED",
+    cashCompetitionEligibility: rule.cashCompetitionEligibility || rule.status || "RESTRICTED",
+    freePlayAllowed: rule.freePlayAllowed ?? true,
+    reason: rule.reason || "Paid competition not available in this jurisdiction.",
+    requiresManualReview: rule.requiresManualReview || rule.status === "REVIEW_REQUIRED",
+    lastUpdatedAt: new Date().toISOString(),
+    updatedBy: adminId,
+  };
+  if (rule.status === "ELIGIBLE") {
+    delete jurisdictionRules.states[normalized];
+  } else {
+    jurisdictionRules.states[normalized] = newRule;
+  }
+  jurisdictionRules.lastReviewedAt = new Date().toISOString();
+  jurisdictionRules.reviewedBy = adminId;
+  logJurisdictionRuleChange(normalized, oldRule, rule.status === "ELIGIBLE" ? null : newRule, adminId);
+  return newRule;
+}
+
+function adminOverrideEligibility(playerId, finalStatus, reason, adminId) {
+  if (!reason || !reason.trim()) {
+    showToast("Eligibility override reason is required.");
+    return null;
+  }
+  const registration = accountState.registration || getRegistration();
+  const original = checkPayoutEligibility(registration, jurisdictionRules).eligibilityStatus;
+  const override = {
+    id: `elig-${Date.now()}`,
+    playerId,
+    originalStatus: original,
+    finalStatus,
+    overrideReason: reason.trim(),
+    adminId,
+    timestamp: new Date().toISOString(),
+  };
+  eligibilityOverrideHistory.unshift(override);
+  persistEligibilityOverrides();
+  return override;
+}
+
+const movementStatuses = ["AUTO_APPROVED", "AUTO_DENIED", "NEEDS_REVIEW", "EMERGENCY_REVIEW", "ADMIN_APPROVED", "ADMIN_DENIED", "ADMIN_OVERRIDDEN"];
+
+function getSystemDecision(score, hardRuleViolations = [], softRuleFlags = []) {
+  if (hardRuleViolations.length) return "AUTO_DENIED";
+  if (score < 50) return "AUTO_DENIED";
+  if (score < 70) return "NEEDS_REVIEW";
+  if (softRuleFlags.length) return "NEEDS_REVIEW";
+  return "AUTO_APPROVED";
+}
+
+function evaluateMovementRequest(request, type) {
+  const hardRuleViolations = [];
+  const softRuleFlags = [];
+  const reasons = [];
+  const text = `${request.reason || ""} ${request.notes || ""}`.toLowerCase();
+
+  if (request.destinationRosterCount > 8) hardRuleViolations.push("Team exceeds roster limit");
+  if (request.sourceRosterCount < 5) hardRuleViolations.push("Team drops below minimum roster");
+  if (request.playerStatus === "banned" || request.playerStatus === "suspended") hardRuleViolations.push("Player is banned or suspended");
+  if (request.cooldown) hardRuleViolations.push("Player is in movement cooldown");
+  if (request.deadlinePassed) hardRuleViolations.push("Trade deadline has passed");
+  if (request.returningWithin14Days) hardRuleViolations.push("Player is trying to return to previous team within 14 days");
+  if (request.leagueEligible === false) hardRuleViolations.push("Player is not league eligible");
+  if (request.playoffEligible === false) hardRuleViolations.push("Move violates playoff eligibility rules");
+
+  if ((request.tradeValueDifference || 0) > 100) softRuleFlags.push("Trade value difference above 100");
+  if (request.topThreeGetsStronger) softRuleFlags.push("Top-3 team gets stronger");
+  if (request.bottomThreeGetsWeaker) softRuleFlags.push("Bottom-3 team gets weaker");
+  if ((request.allStarCountAfter || 0) >= 3) softRuleFlags.push("Team would have 3 or more All-Star-or-higher players");
+  if (request.repeatedTeams) softRuleFlags.push("Same two teams trade repeatedly");
+  if (request.friendHistory) softRuleFlags.push("Player has friend/history connection with receiving team");
+  if (type === "releaseRequest" && text.includes("performance")) softRuleFlags.push("Release reason is skill/performance");
+  if (request.stackingConcern) softRuleFlags.push("Waiver claim creates team stacking concern");
+  if (request.closeToPlayoffs) softRuleFlags.push("Move happens close to playoffs");
+
+  if (/(serious conduct|cheating|harassment|emergency availability)/.test(text)) {
+    return {
+      systemDecision: "EMERGENCY_REVIEW",
+      systemConfidenceScore: 58,
+      hardRuleViolations,
+      softRuleFlags,
+      systemReasons: ["Emergency or integrity keyword detected", ...hardRuleViolations, ...softRuleFlags],
+    };
+  }
+
+  const systemConfidenceScore = hardRuleViolations.length ? 94 : softRuleFlags.length ? 72 : request.systemConfidenceScore || 96;
+  const systemDecision = getSystemDecision(systemConfidenceScore, hardRuleViolations, softRuleFlags);
+  if (systemConfidenceScore >= 90) reasons.push("90-100 confidence can auto-process");
+  if (systemConfidenceScore >= 70 && systemConfidenceScore < 90) reasons.push("70-89 confidence can auto-process with warning");
+  if (systemConfidenceScore >= 50 && systemConfidenceScore < 70) reasons.push("50-69 confidence requires review");
+  if (systemConfidenceScore < 50) reasons.push("Below 50 confidence requires denial or commissioner review");
+  if (!hardRuleViolations.length && !softRuleFlags.length) reasons.push("No hard violations or major soft flags");
+
+  return {
+    systemDecision,
+    systemConfidenceScore,
+    hardRuleViolations,
+    softRuleFlags,
+    systemReasons: [...reasons, ...hardRuleViolations, ...softRuleFlags],
+  };
+}
+
+function evaluateTradeOffer(tradeOffer) {
+  return evaluateMovementRequest(tradeOffer, "tradeOffer");
+}
+
+function evaluateWaiverClaim(waiverClaim) {
+  return evaluateMovementRequest(waiverClaim, "waiverClaim");
+}
+
+function evaluateReleaseRequest(releaseRequest) {
+  return evaluateMovementRequest(releaseRequest, "releaseRequest");
+}
+
+function evaluatePlayerTradeRequest(tradeRequest) {
+  return evaluateMovementRequest(tradeRequest, "playerTradeRequest");
+}
+
+function buildMovementRequest(type, request) {
+  const evaluator = { tradeOffer: evaluateTradeOffer, waiverClaim: evaluateWaiverClaim, releaseRequest: evaluateReleaseRequest, playerTradeRequest: evaluatePlayerTradeRequest }[type];
+  const decision = evaluator(request);
+  return {
+    ...request,
+    movementType: type,
+    createdAt: request.createdAt || new Date().toISOString(),
+    status: decision.systemDecision,
+    adminDecision: request.adminDecision || "",
+    adminOverrideReason: request.adminOverrideReason || "",
+    adminId: request.adminId || "",
+    reviewedAt: request.reviewedAt || "",
+    ...decision,
+  };
+}
+
+function demoMovementStore() {
+  const requests = [
+    buildMovementRequest("tradeOffer", { id: "move-101", title: "Shockers acquire Nova Miles", player: "Nova Miles", fromTeam: "Sharks", toTeam: "Shockers", destinationRosterCount: 8, sourceRosterCount: 6, tradeValueDifference: 58, notes: "Balanced guard-for-wing trade." }),
+    buildMovementRequest("tradeOffer", { id: "move-102", title: "Kings send All-Star PF to Shockers", player: "KashFive", fromTeam: "Kings", toTeam: "Shockers", destinationRosterCount: 9, sourceRosterCount: 5, tradeValueDifference: 132, topThreeGetsStronger: true, allStarCountAfter: 3, notes: "Contender upgrade near playoffs." }),
+    buildMovementRequest("waiverClaim", { id: "move-103", title: "Wave claim Reef Carter", player: "Reef Carter", toTeam: "Wave", destinationRosterCount: 7, waiverOrder: 4, stackingConcern: false, notes: "Open roster slot, no active hold." }),
+    buildMovementRequest("releaseRequest", { id: "move-104", title: "Pride release SplashMia", player: "SplashMia", fromTeam: "Pride", sourceRosterCount: 5, reason: "Serious conduct and emergency availability review", notes: "Captain requested immediate admin ruling." }),
+    buildMovementRequest("playerTradeRequest", { id: "move-105", title: "MaskOn requests trade to Sharks", player: "MaskOn", fromTeam: "Rage", toTeam: "Sharks", destinationRosterCount: 7, sourceRosterCount: 7, friendHistory: true, closeToPlayoffs: true, notes: "Player-initiated contender request." }),
+  ];
+  return {
+    requests,
+    history: requests.map((request) => ({ id: `hist-${request.id}`, movementType: request.movementType, movementId: request.id, originalDecision: request.systemDecision, finalDecision: request.status, reasons: request.systemReasons, createdAt: request.createdAt })),
+  };
+}
+
+let movementStore = readStore("mcpaMovementStore", demoMovementStore());
+
+function persistMovementStore() {
+  writeStore("mcpaMovementStore", movementStore);
+}
+
+function logMovementDecision(movementType, movementId, originalDecision, finalDecision, reasons = []) {
+  movementStore.history.unshift({ id: `hist-${Date.now()}`, movementType, movementId, originalDecision, finalDecision, reasons, createdAt: new Date().toISOString() });
+  persistMovementStore();
+}
+
+function adminOverrideMovement(movementId, movementType, newDecision, overrideReason, adminId) {
+  if (!overrideReason || !overrideReason.trim()) {
+    showToast("Override reason is required before saving admin movement decisions.");
+    return null;
+  }
+  const movement = movementStore.requests.find((item) => item.id === movementId && item.movementType === movementType);
+  if (!movement) return null;
+  const originalDecision = movement.systemDecision;
+  movement.adminDecision = newDecision;
+  movement.adminOverrideReason = overrideReason.trim();
+  movement.adminId = adminId;
+  movement.reviewedAt = new Date().toISOString();
+  movement.status = newDecision;
+  logMovementDecision(movementType, movementId, originalDecision, newDecision, [overrideReason.trim()]);
+  persistMovementStore();
+  return movement;
+}
+
+function generateLeagueCupGroups(teams) {
+  return ["A", "B", "C"].map((group, groupIndex) => ({
+    id: `GROUP_${group}`,
+    name: `Group ${group}`,
+    teams: teams.slice(groupIndex * 4, groupIndex * 4 + 4).map((team) => ({
+      teamId: team.name,
+      name: team.name,
+      mmr: 1080 + groupIndex * 55 + team.short.length * 12,
+      cupStatus: "GROUP_STAGE",
+    })),
+  }));
+}
+
+function generateCupGroupSchedule(groups) {
+  const games = [];
+  groups.forEach((group) => {
+    group.teams.forEach((home, homeIndex) => {
+      group.teams.slice(homeIndex + 1).forEach((away) => {
+        games.push({
+          id: `cup-${group.id}-${home.teamId}-${away.teamId}`.replace(/[^a-zA-Z0-9-]/g, "-"),
+          groupId: group.id,
+          type: "CUP_GROUP",
+          homeTeamId: home.teamId,
+          awayTeamId: away.teamId,
+          status: "SCHEDULED",
+          countsForSeason: true,
+          mmrMultiplier: 1.05,
+          scores: {},
+        });
+      });
+    });
+  });
+  return games;
+}
+
+function makeCupState() {
+  const groups = generateLeagueCupGroups(officialTeams);
+  const seededGames = generateCupGroupSchedule(groups).map((game, index) =>
+    index < 7
+      ? {
+          ...game,
+          status: "FINAL",
+          winningTeamId: index % 2 ? game.awayTeamId : game.homeTeamId,
+          scores: { [game.homeTeamId]: 70 + index * 3, [game.awayTeamId]: 66 + index * 2 },
+        }
+      : game,
+  );
+  return { id: "midseason-cup-2026", name: "Midseason Cup", status: "GROUP_STAGE", groups, games: seededGames, standings: [], knockoutTeams: [], knockoutGames: [], championId: "", history: [], overrides: [], adminQueue: [], rosterLocks: {} };
+}
+
+let cupState = readStore("mcpaCupState", null) || makeCupState();
+
+function persistCupState() {
+  writeStore("mcpaCupState", cupState);
+}
+
+function logCupHistory(actionType, details) {
+  cupState.history.unshift({ id: `cup-hist-${Date.now()}`, actionType, details, createdAt: new Date().toISOString() });
+  cupState.history = cupState.history.slice(0, 50);
+}
+
+function submitCupGameResult(gameId, winningTeamId, scoreData = {}) {
+  const game = cupState.games.find((item) => item.id === gameId);
+  if (!game) return null;
+  game.status = "FINAL";
+  game.winningTeamId = winningTeamId;
+  game.scores = scoreData;
+  game.mmrMultiplier = 1.05;
+  logCupHistory("CUP_GROUP_RESULT", { gameId, winningTeamId, scoreData });
+  updateCupStandings();
+  persistCupState();
+  return game;
+}
+
+function updateCupStandings() {
+  const standings = {};
+  cupState.groups.forEach((group) => {
+    group.teams.forEach((team) => {
+      standings[team.teamId] = { ...team, groupId: group.id, wins: 0, losses: 0, pf: 0, pa: 0, pd: 0, forfeits: 0, strength: 0 };
+    });
+  });
+  cupState.games.filter((game) => game.status === "FINAL").forEach((game) => {
+    const homeScore = Number(game.scores[game.homeTeamId] || 0);
+    const awayScore = Number(game.scores[game.awayTeamId] || 0);
+    const cappedDiff = Math.max(-20, Math.min(20, homeScore - awayScore));
+    const home = standings[game.homeTeamId];
+    const away = standings[game.awayTeamId];
+    if (!home || !away) return;
+    home.pf += homeScore;
+    home.pa += awayScore;
+    home.pd += cappedDiff;
+    away.pf += awayScore;
+    away.pa += homeScore;
+    away.pd -= cappedDiff;
+    home.strength += away.mmr || 1000;
+    away.strength += home.mmr || 1000;
+    if (game.winningTeamId === game.homeTeamId) {
+      home.wins += 1;
+      away.losses += 1;
+    } else {
+      away.wins += 1;
+      home.losses += 1;
+    }
+  });
+  cupState.standings = Object.values(standings);
+  applyCupGroupTiebreakers();
+  persistCupState();
+  return cupState.standings;
+}
+
+function cupSort(first, second) {
+  return second.wins - first.wins || second.pd - first.pd || second.pf - first.pf || second.strength - first.strength || (second.mmr || 0) - (first.mmr || 0) || first.forfeits - second.forfeits || first.name.localeCompare(second.name);
+}
+
+function applyCupGroupTiebreakers() {
+  cupState.groups.forEach((group) => {
+    cupState.standings
+      .filter((team) => team.groupId === group.id)
+      .sort(cupSort)
+      .forEach((row, index) => {
+        row.seed = index + 1;
+        row.cupStatus = index === 0 ? "QUALIFIED" : "ELIMINATED";
+      });
+  });
+  return cupState.standings;
+}
+
+function determineGroupWinners() {
+  updateCupStandings();
+  return cupState.groups.map((group) => cupState.standings.filter((team) => team.groupId === group.id).sort(cupSort)[0]).filter(Boolean);
+}
+
+function determineWildCardTeam() {
+  updateCupStandings();
+  const winners = new Set(determineGroupWinners().map((team) => team.teamId));
+  const wildCard = cupState.standings.filter((team) => !winners.has(team.teamId)).sort(cupSort)[0];
+  if (wildCard) wildCard.cupStatus = "WILD_CARD";
+  return wildCard;
+}
+
+function seedCupKnockoutTeams() {
+  const teams = [...determineGroupWinners(), determineWildCardTeam()].filter(Boolean).sort(cupSort);
+  cupState.knockoutTeams = teams.map((team, index) => ({ ...team, knockoutSeed: index + 1, cupStatus: team.cupStatus === "WILD_CARD" ? "WILD_CARD" : "QUALIFIED" }));
+  cupState.status = teams.length === 4 ? "KNOCKOUT" : "GROUP_STAGE";
+  persistCupState();
+  return cupState.knockoutTeams;
+}
+
+function generateCupKnockoutBracket() {
+  const seeds = seedCupKnockoutTeams();
+  if (seeds.length < 4) return [];
+  cupState.knockoutGames = [
+    { id: "cup-semi-1", type: "CUP_SEMIFINAL", homeTeamId: seeds[0].teamId, awayTeamId: seeds[3].teamId, status: "SCHEDULED", mmrMultiplier: 1.1, scores: {} },
+    { id: "cup-semi-2", type: "CUP_SEMIFINAL", homeTeamId: seeds[1].teamId, awayTeamId: seeds[2].teamId, status: "SCHEDULED", mmrMultiplier: 1.1, scores: {} },
+  ];
+  logCupHistory("KNOCKOUT_GENERATED", { seeds: seeds.map((team) => team.teamId) });
+  persistCupState();
+  return cupState.knockoutGames;
+}
+
+function submitCupSemifinalResult(gameId, winningTeamId, scoreData = {}) {
+  const game = cupState.knockoutGames.find((item) => item.id === gameId);
+  if (!game) return null;
+  game.status = "FINAL";
+  game.winningTeamId = winningTeamId;
+  game.scores = scoreData;
+  if (cupState.knockoutGames.filter((item) => item.type === "CUP_SEMIFINAL" && item.status === "FINAL").length === 2 && !cupState.knockoutGames.some((item) => item.type === "CUP_FINAL")) {
+    const finalists = cupState.knockoutGames.filter((item) => item.type === "CUP_SEMIFINAL").map((item) => item.winningTeamId);
+    cupState.knockoutGames.push({ id: "cup-final", type: "CUP_FINAL", homeTeamId: finalists[0], awayTeamId: finalists[1], status: "SCHEDULED", mmrMultiplier: 1.15, scores: {} });
+  }
+  logCupHistory("CUP_SEMIFINAL_RESULT", { gameId, winningTeamId, scoreData });
+  persistCupState();
+  return game;
+}
+
+function submitCupFinalResult(gameId, winningTeamId, scoreData = {}) {
+  const game = cupState.knockoutGames.find((item) => item.id === gameId);
+  if (!game) return null;
+  game.status = "FINAL";
+  game.winningTeamId = winningTeamId;
+  game.scores = scoreData;
+  declareCupChampion(winningTeamId);
+  logCupHistory("CUP_FINAL_RESULT", { gameId, winningTeamId, scoreData });
+  persistCupState();
+  return game;
+}
+
+function declareCupChampion(teamId) {
+  cupState.championId = teamId;
+  cupState.status = "COMPLETED";
+  logCupHistory("CUP_CHAMPION", { teamId });
+  persistCupState();
+  return teamId;
+}
+
+function validateCupEligibility(playerId, teamId, gameType) {
+  const player = rankedPlayers.find((item) => item.id === playerId || item.name === playerId);
+  const issues = [];
+  if (!player) issues.push("Player not found");
+  if (player && player.teamId !== teamId) issues.push("Player is not on this Cup roster");
+  if (gameType === "CUP_FINAL" && !(player?.cupGroupGamesPlayed > 0)) issues.push("Player did not play a Cup group game");
+  return { eligible: !issues.length, issues };
+}
+
+function lockCupRosters(stage) {
+  cupState.rosterLocks[stage] = new Date().toISOString();
+  logCupHistory("CUP_ROSTER_LOCK", { stage });
+  persistCupState();
+}
+
+function requestCupEmergencyReplacement(teamId, removedPlayerId, replacementPlayerId, reason) {
+  const request = { id: `cup-er-${Date.now()}`, teamId, removedPlayerId, replacementPlayerId, reason, createdAt: new Date().toISOString() };
+  const decision = evaluateCupEmergencyReplacement(request);
+  cupState.adminQueue.unshift({ ...request, ...decision });
+  persistCupState();
+  return request;
+}
+
+function evaluateCupEmergencyReplacement(request) {
+  const removed = rankedPlayers.find((player) => player.id === request.removedPlayerId || player.name === request.removedPlayerId);
+  const replacement = rankedPlayers.find((player) => player.id === request.replacementPlayerId || player.name === request.replacementPlayerId);
+  const flags = [];
+  if (replacement && removed && replacement.mmr > removed.mmr) flags.push("Emergency replacement higher MMR than removed player");
+  if (/cheating|integrity|harassment/i.test(request.reason || "")) flags.push("Active cheating or integrity report");
+  return { decision: flags.length ? "NEEDS_REVIEW" : "AUTO_APPROVED", flags, confidence: flags.length ? 64 : 93 };
+}
+
+function adminOverrideCupDecision(decisionId, finalDecision, reason, adminId) {
+  if (!reason || !reason.trim()) {
+    showToast("Cup override reason is required.");
+    return null;
+  }
+  const original = cupState.adminQueue.find((item) => item.id === decisionId) || { decision: "SYSTEM" };
+  const override = { id: `cup-override-${Date.now()}`, decisionId, originalDecision: original.decision, finalDecision, overrideReason: reason.trim(), adminId, timestamp: new Date().toISOString() };
+  cupState.overrides.unshift(override);
+  logCupHistory("CUP_ADMIN_OVERRIDE", override);
+  persistCupState();
+  return override;
+}
+
+let rankedPlayers = readStore("mcpaRankedPlayers", window.MCPA_MMR.createDemoRankedPlayers(players, officialTeams));
+
+function persistRankedPlayers() {
+  writeStore("mcpaRankedPlayers", rankedPlayers);
+}
+
+const defaultRecordBooks = {
+  draftResults: [],
+  leagueRecords: [
+    { scope: "League", category: "Career high points", player: "DreLock", value: 52, detail: "2025 Summer vs Rage" },
+    { scope: "League", category: "Career high assists", player: "JCity", value: 22, detail: "2025 Summer vs Pride" },
+  ],
+  teamRecords: [
+    { scope: "Team", team: "Shockers", category: "Single-game points", player: "DreLock", value: 52 },
+    { scope: "Team", team: "Rage", category: "Single-game rebounds", player: "MaskOn", value: 24 },
+  ],
+  seasonHighs: [
+    { scope: "Season", category: "Points", player: "DreLock", value: 31, detail: "Current OCR sample" },
+    { scope: "Season", category: "Assists", player: "JCity", value: 11, detail: "Current OCR sample" },
+    { scope: "Season", category: "Rebounds", player: "MaskOn", value: 12, detail: "Current OCR sample" },
+  ],
+};
+
+let recordBooks = readStore("mcpaRecordBooks", defaultRecordBooks);
+
+function persistRecordBooks() {
+  writeStore("mcpaRecordBooks", recordBooks);
+}
+
 function getRegistration() {
+  const statedCity = document.querySelector("#signupCity").value.trim();
+  const statedState = normalizeState(document.querySelector("#signupState").value);
+  const statedZip = document.querySelector("#signupZip").value.trim();
+  const dob = document.querySelector("#signupDob").value;
+  registrationLocationVerification = {
+    ...registrationLocationVerification,
+    statedCity,
+    statedState,
+    statedZip,
+    ipState: registrationLocationVerification.ipState || statedState,
+    ipCountry: registrationLocationVerification.ipCountry || "US",
+  };
+  registrationLocationVerification.locationMismatch = detectLocationMismatch({ locationVerification: registrationLocationVerification });
   return {
     name: document.querySelector("#signupName").value.trim(),
     email: document.querySelector("#signupEmail").value.trim(),
-    age: Number(document.querySelector("#signupAge").value),
+    age: calculateAgeFromDob(dob) || Number(document.querySelector("#signupAge").value),
+    dob,
     position: document.querySelector("#signupPosition").value,
-    city: document.querySelector("#signupCity").value.trim(),
+    city: statedCity,
+    state: statedState,
+    zip: statedZip,
     build: document.querySelector("#signupBuild").value.trim(),
+    kycStatus: document.querySelector("#signupKyc").value,
+    locationVerification: { ...registrationLocationVerification },
   };
 }
 
@@ -835,8 +1615,11 @@ function isRegistrationComplete() {
     registration.name &&
       registration.email.includes("@") &&
       registration.age >= 13 &&
+      registration.dob &&
       registration.position &&
       registration.city &&
+      registration.state &&
+      registration.zip &&
       registration.build,
   );
 }
@@ -890,14 +1673,23 @@ function renderTeamDirectory() {
   target.innerHTML = officialTeams
     .map(
       (team) => `
-        <article>
+        <button class="team-directory-card" type="button" data-team-open="${escapeHtml(team.name)}">
           ${teamLogoBadge(team.name)}
           <strong>${team.name}</strong>
           <small>${team.division} division</small>
-        </article>
+        </button>
       `,
     )
     .join("");
+
+  target.querySelectorAll("[data-team-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedTeamName = button.dataset.teamOpen;
+      renderTeamPage();
+      setTab("team");
+      showToast(`${selectedTeamName} team page opened.`);
+    });
+  });
 }
 
 function openMenu() {
@@ -918,6 +1710,7 @@ function setTab(tabName) {
     tabName = "support";
   }
 
+  appShell.classList.toggle("chat-shell", tabName === "chat");
   screens.forEach((screen) => {
     screen.classList.toggle("active", screen.id === `screen-${tabName}`);
   });
@@ -929,6 +1722,11 @@ function setTab(tabName) {
   closeMenu();
   window.scrollTo({ top: 0, behavior: "smooth" });
   appShell.scrollTo({ top: 0, behavior: "smooth" });
+  if (tabName === "chat") {
+    renderChatRooms();
+    renderMessages();
+    window.setTimeout(scrollToBottom, 120);
+  }
 }
 
 function connectedCount() {
@@ -936,6 +1734,7 @@ function connectedCount() {
 }
 
 function updateLoginGate() {
+  renderRegistrationEligibility();
   document.querySelectorAll("[data-login-platform]").forEach((button) => {
     button.classList.toggle("connected", button.dataset.loginPlatform === accountState.platform);
   });
@@ -983,6 +1782,42 @@ function updateConnectionCards() {
   });
 }
 
+function renderRegistrationEligibility() {
+  const card = document.querySelector("#registrationEligibilityCard");
+  if (!card) return;
+
+  const registration = getRegistration();
+  const payout = checkPayoutEligibility(registration, jurisdictionRules);
+  const cash = checkCashCompetitionEligibility(registration, jurisdictionRules);
+  const finalStatus = payout.eligibilityStatus === "ELIGIBLE" ? cash.eligibilityStatus : payout.eligibilityStatus;
+  const finalReason = finalStatus === payout.eligibilityStatus ? payout.eligibilityReason : cash.eligibilityReason;
+
+  registrationLocationVerification = {
+    ...registrationLocationVerification,
+    eligibilityStatus: finalStatus,
+    eligibilityReason: finalReason,
+    locationMismatch: Boolean(payout.locationMismatch || cash.locationMismatch || detectLocationMismatch(registration)),
+  };
+  writeStore("mcpaRegistrationLocation", registrationLocationVerification);
+
+  document.querySelector("#eligibilityStatusText").textContent = finalStatus;
+  document.querySelector("#eligibilityMessageText").textContent = getEligibilityMessage(finalStatus);
+  document.querySelector("#eligibilityStatedState").textContent = registration.locationVerification.statedState || "Missing";
+  document.querySelector("#eligibilityCurrentState").textContent = registration.locationVerification.currentState
+    ? `${registration.locationVerification.currentState} verified`
+    : "Not verified";
+  document.querySelector("#eligibilityKycStatus").textContent = registration.kycStatus === "VERIFIED" ? "Verified" : registration.kycStatus === "UNDER_REVIEW" ? "Under review" : "Pending";
+  document.querySelector("#eligibilityMismatch").textContent = registrationLocationVerification.locationMismatch ? "Review" : "None";
+
+  card.dataset.status = finalStatus;
+  const warning = document.querySelector("#eligibilityWarning");
+  const appeal = document.querySelector("#startAppealButton");
+  const showWarning = ["FREE_PLAY_ONLY", "RESTRICTED", "NEEDS_MANUAL_REVIEW", "UNDER_REVIEW", "BLOCKED"].includes(finalStatus) || registrationLocationVerification.locationMismatch;
+  warning.hidden = !showWarning;
+  warning.textContent = showWarning ? finalReason : "";
+  appeal.hidden = !["FREE_PLAY_ONLY", "RESTRICTED", "NEEDS_MANUAL_REVIEW", "UNDER_REVIEW", "BLOCKED"].includes(finalStatus);
+}
+
 function unlockApp() {
   if (!isRegistrationComplete()) {
     showToast("Complete name, age, email, city, build, and main position before entering.");
@@ -1004,6 +1839,7 @@ function unlockApp() {
   menuBackdrop.classList.remove("is-locked");
   avatarButton.textContent = accountState.platform === "Xbox" ? "XB" : "PS";
   avatarButton.setAttribute("aria-label", `${accountState.platform} verified profile`);
+  document.querySelector("#platformBadge").textContent = accountState.platform === "Xbox" ? "Xbox" : "PSN";
   renderDraftRoom();
   renderDirectMessages();
   renderVoiceRooms();
@@ -1029,12 +1865,65 @@ function signOut() {
   menuBackdrop.classList.add("is-locked");
   avatarButton.textContent = "TL";
   avatarButton.setAttribute("aria-label", "Commissioner profile");
+  document.querySelector("#platformBadge").textContent = "XB/PSN";
   updateLoginGate();
   updateConnectionCards();
   renderDirectMessages();
   renderVoiceRooms();
   renderVoiceStage();
   showToast("Signed out. Required account connections cleared.");
+}
+
+function applyPreviewSessionFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const previewRole = params.has("staff") ? "admin" : params.has("player") ? "player" : "";
+  if (!previewRole) return false;
+
+  accountState.platform = "Xbox";
+  accountState.discord = true;
+  accountState.twitch = true;
+  accountState.role = previewRole;
+  accountState.signedIn = true;
+  accountState.registration = {
+    id: previewRole === "admin" ? "preview-staff" : "preview-player",
+    name: previewRole === "admin" ? "Travon Admin" : "MCPA Player",
+    email: previewRole === "admin" ? "staff@mcpa.local" : "player@mcpa.local",
+    age: 24,
+    dob: "2002-01-01",
+    position: "PG",
+    city: "Charlotte",
+    state: "NC",
+    zip: "28202",
+    build: "Two-way shot creator",
+    kycStatus: "VERIFIED",
+    locationVerification: {
+      statedCity: "Charlotte",
+      statedState: "NC",
+      statedZip: "28202",
+      currentState: "NC",
+      currentCountry: "US",
+      currentLatitude: null,
+      currentLongitude: null,
+      ipState: "NC",
+      ipCountry: "US",
+      locationPermissionGranted: true,
+      locationVerifiedAt: new Date().toISOString(),
+      locationMismatch: false,
+      vpnOrProxyDetected: false,
+      eligibilityStatus: "ELIGIBLE",
+      eligibilityReason: getEligibilityMessage("ELIGIBLE"),
+    },
+  };
+
+  document.body.dataset.role = accountState.role;
+  loginScreen.classList.add("hidden");
+  appShell.classList.remove("is-locked");
+  bottomNav.classList.remove("is-locked");
+  sideMenu.classList.remove("is-locked");
+  menuBackdrop.classList.remove("is-locked");
+  avatarButton.textContent = "XB";
+  avatarButton.setAttribute("aria-label", `${accountState.platform} verified profile`);
+  return true;
 }
 
 function showToast(message) {
@@ -1154,14 +2043,111 @@ function renderHistory() {
     .join("");
 }
 
+function seedCheckinPlayers(teamName, confirmedCount = 0) {
+  const positions = ["PG", "SG", "SF", "PF", "C"];
+  const team = officialTeams.find((item) => item.name === teamName);
+  const seeded = players
+    .filter((player) => player.team === teamName)
+    .slice(0, 5)
+    .map((player, index) => ({
+      name: player.name,
+      initials: player.initials,
+      position: player.position || positions[index],
+      confirmed: index < confirmedCount,
+    }));
+
+  while (seeded.length < 5) {
+    const position = positions[seeded.length];
+    seeded.push({
+      name: `${team?.short || teamName.slice(0, 3).toUpperCase()} ${position}`,
+      initials: `${(team?.short || teamName).slice(0, 1)}${position.slice(0, 1)}`,
+      position,
+      confirmed: seeded.length < confirmedCount,
+    });
+  }
+
+  return seeded;
+}
+
+function ensureGameCheckins(game) {
+  if (game.checkins) return game.checkins;
+  const preset = game.id === "g43" ? 5 : game.id === "g42" ? 3 : game.id === "g45" ? 2 : 1;
+  game.checkins = {
+    home: seedCheckinPlayers(game.home, preset),
+    away: seedCheckinPlayers(game.away, Math.max(0, preset - 1)),
+  };
+  return game.checkins;
+}
+
+function confirmedCount(entries) {
+  return entries.filter((entry) => entry.confirmed).length;
+}
+
+function updateGameLockStatus(game) {
+  const checkins = ensureGameCheckins(game);
+  const locked = confirmedCount(checkins.home) === 5 && confirmedCount(checkins.away) === 5;
+  game.checkIn = `${confirmedCount(checkins.home) + confirmedCount(checkins.away)}/10 confirmed`;
+  if (locked && !["Live stats", "Tournament"].includes(game.status)) {
+    game.status = "Scheduled";
+  }
+  return locked;
+}
+
+function renderCheckinRows(entries) {
+  return entries
+    .map(
+      (entry) => `
+        <span class="${entry.confirmed ? "confirmed" : "pending"}">
+          <b>${escapeHtml(entry.position)}</b>
+          ${escapeHtml(entry.name)}
+        </span>
+      `,
+    )
+    .join("");
+}
+
+function handleGameCheckIn(gameId) {
+  const game = scheduledGames.find((item) => item.id === gameId);
+  if (!game) return;
+
+  const checkins = ensureGameCheckins(game);
+  const position = document.querySelector(`[data-checkin-position="${gameId}"]`)?.value || "PG";
+  const userName = currentUserName();
+  const side = game.home === selectedTeamName ? "home" : game.away === selectedTeamName ? "away" : "home";
+  const entries = checkins[side];
+  let entry = entries.find((item) => item.self || item.name === userName) || entries.find((item) => !item.confirmed);
+
+  if (!entry) {
+    showToast(`${game[side]} already has five confirmed players.`);
+    return;
+  }
+
+  entry.name = userName;
+  entry.initials = initialsFromName(userName);
+  entry.position = position;
+  entry.confirmed = true;
+  entry.self = true;
+  const locked = updateGameLockStatus(game);
+  renderScheduledGames();
+  renderLeagueLockedGames();
+  showToast(locked ? `${game.home} vs ${game.away} is locked as scheduled.` : `${userName} checked in at ${position}.`);
+}
+
 function renderScheduledGames() {
   const target = document.querySelector("#scheduledGames");
   if (!target) return;
 
   const games = scheduledGames.filter((game) => game.tags.includes(scheduleFilter));
   target.innerHTML = games
-    .map(
-      (game) => `
+    .map((game) => {
+      const checkins = ensureGameCheckins(game);
+      const homeConfirmed = confirmedCount(checkins.home);
+      const awayConfirmed = confirmedCount(checkins.away);
+      const homePct = (homeConfirmed / 5) * 100;
+      const awayPct = (awayConfirmed / 5) * 100;
+      updateGameLockStatus(game);
+
+      return `
         <article class="game-card schedule-card">
           <div class="schedule-logos">
             ${teamLogos[game.home] ? teamLogoBadge(game.home) : ""}
@@ -1176,11 +2162,42 @@ function renderScheduledGames() {
             <div><b>Check-in</b><small>${game.checkIn}</small></div>
             <div><b>Stats due</b><small>${game.statSubmitter}</small></div>
           </div>
-          <button class="ghost-button schedule-action" type="button" data-game-action="${game.id}">Send reminder</button>
+          <div class="checkin-progress">
+            <div>
+              <span><b>${escapeHtml(game.home)}</b><small>${homeConfirmed}/5 confirmed</small></span>
+              <em><i style="width:${homePct}%"></i></em>
+            </div>
+            <div>
+              <span><b>${escapeHtml(game.away)}</b><small>${awayConfirmed}/5 confirmed</small></span>
+              <em><i style="width:${awayPct}%"></i></em>
+            </div>
+          </div>
+          <div class="checkin-actions">
+            <select data-checkin-position="${game.id}" aria-label="Check-in position">
+              <option>PG</option>
+              <option>SG</option>
+              <option>SF</option>
+              <option>PF</option>
+              <option>C</option>
+            </select>
+            <button class="solid-button" type="button" data-checkin-game="${game.id}">Check in</button>
+          </div>
+          <details class="checkin-details">
+            <summary>Progress</summary>
+            <div class="checkin-rosters">
+              <div><strong>${escapeHtml(game.home)}</strong>${renderCheckinRows(checkins.home)}</div>
+              <div><strong>${escapeHtml(game.away)}</strong>${renderCheckinRows(checkins.away)}</div>
+            </div>
+          </details>
+          <button class="ghost-button schedule-action admin-only" type="button" data-game-action="${game.id}">Send reminder</button>
         </article>
-      `,
-    )
+      `;
+    })
     .join("");
+
+  target.querySelectorAll("[data-checkin-game]").forEach((button) => {
+    button.addEventListener("click", () => handleGameCheckIn(button.dataset.checkinGame));
+  });
 
   target.querySelectorAll("[data-game-action]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1190,6 +2207,26 @@ function renderScheduledGames() {
   });
 }
 
+function renderEventCalendar() {
+  const target = document.querySelector("#eventCalendar");
+  if (!target) return;
+
+  target.innerHTML = calendarEvents
+    .map(
+      (event) => `
+        <article class="calendar-card">
+          <span>${escapeHtml(event.date)}</span>
+          <div>
+            <strong>${escapeHtml(event.label)}</strong>
+            <small>${escapeHtml(event.detail)}</small>
+          </div>
+          <b>${escapeHtml(event.type)}</b>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderLeagueLockedGames() {
   const target = document.querySelector("#leagueLockedGames");
   if (!target) return;
@@ -1197,8 +2234,9 @@ function renderLeagueLockedGames() {
   target.innerHTML = scheduledGames
     .filter((game) => game.status !== "Draft")
     .slice(0, 3)
-    .map(
-      (game) => `
+    .map((game) => {
+      updateGameLockStatus(game);
+      return `
         <article class="game-card locked-time-card">
           <div class="schedule-logos">
             ${teamLogos[game.home] ? teamLogoBadge(game.home) : ""}
@@ -1210,8 +2248,8 @@ function renderLeagueLockedGames() {
           </div>
           <span class="game-status">${game.status}</span>
         </article>
-      `,
-    )
+      `;
+    })
     .join("");
 }
 
@@ -1251,20 +2289,61 @@ function renderScoreResults() {
 function renderTeamPage() {
   const roster = document.querySelector("#teamPageRoster");
   const logo = document.querySelector("#teamPageLogo");
+  const team = officialTeams.find((item) => item.name === selectedTeamName) || officialTeams[0];
+  const standing = teamStandings.find((item) => item.team === team.name) || { w: 0, l: 0, division: team.division, streak: "-", pf: 0, pa: 0 };
+  const ranked = sortedStandings().map((item, index) => ({ ...item, seed: index + 1 }));
+  const seededTeam = ranked.find((item) => item.team === team.name);
+  const nextGame = scheduledGames.find((game) => game.home === team.name || game.away === team.name);
+
   if (logo) {
-    logo.innerHTML = teamLogoBadge("Shockers");
+    logo.innerHTML = teamLogoBadge(team.name);
   }
+
+  document.querySelector("#team-title").textContent = `${team.name} HQ`;
+  document.querySelector("#teamPageName").textContent = team.name;
+  document.querySelector("#teamPageMeta").textContent = `${standing.w}-${standing.l} · ${team.division} #${seededTeam?.seed || "-"} · Team Owner: ${team.name === "Shockers" ? "DreLock" : "Captain pending"}`;
+  document.querySelector("#teamPageRecord").textContent = `${standing.w}-${standing.l}`;
+  document.querySelector("#teamPageSeed").textContent = `${team.division} #${seededTeam?.seed || "-"} · ${standing.streak}`;
+  document.querySelector("#teamPagePrize").textContent = `$${Math.max(420, (standing.w * 95 + 100)).toLocaleString()}`;
+  document.querySelector("#teamPageNextTime").textContent = nextGame ? nextGame.time.split(" · ").pop() : "TBD";
+  document.querySelector("#teamPageNextOpponent").textContent = nextGame ? `${nextGame.home === team.name ? "vs " + nextGame.away : "@ " + nextGame.home} · ${nextGame.court}` : "No locked matchup";
+  document.querySelector("#teamPageChatActivity").textContent = `${team.name} private room has ${Math.max(1, Math.min(5, standing.w % 6))} players active.`;
+
   if (!roster) return;
 
-  const shockers = [
-    ...players.filter((player) => player.team === "Shockers"),
-    { name: "LockTae", initials: "LT", color: "teal", position: "SG", teamRole: "Captain", ppg: 19.8, apg: 6.4, rpg: 3.1, isLive: false },
-    { name: "ShotKev", initials: "SK", color: "lime", position: "SF", teamRole: "Player", ppg: 17.2, apg: 3.8, rpg: 5.9, isLive: false },
-    { name: "BoardMan", initials: "BM", color: "orange", position: "PF", teamRole: "Player", ppg: 12.6, apg: 2.4, rpg: 9.8, isLive: false },
-    { name: "PaintRue", initials: "PR", color: "red", position: "C", teamRole: "Player", ppg: 14.1, apg: 2.1, rpg: 11.2, isLive: false },
-    { name: "CornerKai", initials: "CK", color: "teal", position: "SG", teamRole: "Sixth Man", ppg: 10.4, apg: 2.8, rpg: 2.9, isLive: false },
+  const rosterSeed = [
+    ...players.filter((player) => player.team === team.name),
+    ...(team.name === "Shockers"
+      ? [
+          { name: "LockTae", initials: "LT", color: "teal", position: "SG", teamRole: "Captain", ppg: 19.8, apg: 6.4, rpg: 3.1, isLive: false },
+          { name: "ShotKev", initials: "SK", color: "lime", position: "SF", teamRole: "Player", ppg: 17.2, apg: 3.8, rpg: 5.9, isLive: false },
+          { name: "BoardMan", initials: "BM", color: "orange", position: "PF", teamRole: "Player", ppg: 12.6, apg: 2.4, rpg: 9.8, isLive: false },
+          { name: "PaintRue", initials: "PR", color: "red", position: "C", teamRole: "Player", ppg: 14.1, apg: 2.1, rpg: 11.2, isLive: false },
+          { name: "CornerKai", initials: "CK", color: "teal", position: "SG", teamRole: "Sixth Man", ppg: 10.4, apg: 2.8, rpg: 2.9, isLive: false },
+        ]
+      : []),
   ].slice(0, 8);
-  roster.innerHTML = shockers
+  const positions = ["PG", "SG", "SF", "PF", "C"];
+  while (rosterSeed.length < 5) {
+    const position = positions[rosterSeed.length % positions.length];
+    rosterSeed.push({
+      name: `${team.short} ${position}`,
+      initials: `${team.short.slice(0, 1)}${position.slice(0, 1)}`,
+      color: team.color,
+      position,
+      teamRole: rosterSeed.length === 0 ? "Captain" : "Player",
+      ppg: (10 + rosterSeed.length * 2.3).toFixed(1),
+      apg: (2 + rosterSeed.length * 0.7).toFixed(1),
+      rpg: (3 + rosterSeed.length * 1.1).toFixed(1),
+      isLive: false,
+    });
+  }
+
+  document.querySelector("#teamPageRosterBadge").textContent = `Roster ${rosterSeed.length}/8`;
+  document.querySelector("#teamPageRosterCount").textContent = `${rosterSeed.length}/8`;
+  document.querySelector("#teamPageSlots").textContent = `${8 - rosterSeed.length} slot${8 - rosterSeed.length === 1 ? "" : "s"} open`;
+
+  roster.innerHTML = rosterSeed
     .map(
       (player) => `
         <button class="player-card compact-player" type="button" data-team-player="${player.name}">
@@ -1512,6 +2591,12 @@ function renderPlayers(list = players) {
 
 function openPlayer(index) {
   const player = players[index];
+  const ranked = rankedPlayers.find((item) => item.name === player.name);
+  const playerRecords = [
+    ...recordBooks.leagueRecords,
+    ...recordBooks.teamRecords,
+    ...recordBooks.seasonHighs,
+  ].filter((record) => record.player === player.name);
   const modal = document.querySelector("#playerModal");
   const modalContent = document.querySelector("#modalContent");
 
@@ -1527,6 +2612,8 @@ function openPlayer(index) {
     <div class="profile-stats">
       <article><span>POS</span><strong>${player.position}</strong></article>
       <article><span>Trust</span><strong>${player.trustScore}</strong></article>
+      <article><span>MMR</span><strong>${ranked?.mmr || 1000}</strong></article>
+      <article><span>Tier</span><strong>${ranked?.tier || "Starter"}</strong></article>
       <article><span>PPG</span><strong>${player.ppg}</strong></article>
       <article><span>APG</span><strong>${player.apg}</strong></article>
       <article><span>RPG</span><strong>${player.rpg}</strong></article>
@@ -1553,6 +2640,12 @@ function openPlayer(index) {
       <strong>Accolades</strong>
       <div>
         ${player.accolades.map((award) => `<span>${award}</span>`).join("")}
+      </div>
+    </div>
+    <div class="accolade-stack">
+      <strong>Record book</strong>
+      <div>
+        ${playerRecords.length ? playerRecords.map((record) => `<span>${record.category}: ${record.value}</span>`).join("") : "<span>No active records</span>"}
       </div>
     </div>
     <div class="shot-map" aria-label="Recent shot map">
@@ -1639,6 +2732,321 @@ function renderSupportTickets() {
   if (adminTarget) {
     adminTarget.innerHTML = markup || `<article class="empty-state"><strong>No support queue</strong><small>Submitted tickets will show here for staff.</small></article>`;
   }
+}
+
+function movementBadgeClass(status) {
+  return String(status || "").toLowerCase().replace(/_/g, "-");
+}
+
+function renderMovementCard(item) {
+  const reasons = item.systemReasons?.length ? item.systemReasons : ["No system reasons recorded"];
+  const hard = item.hardRuleViolations?.length ? item.hardRuleViolations : ["None"];
+  const soft = item.softRuleFlags?.length ? item.softRuleFlags : ["None"];
+  return `
+    <article class="movement-card ${movementBadgeClass(item.status)}">
+      <header>
+        <div>
+          <strong>${escapeHtml(item.title || item.player)}</strong>
+          <small>${escapeHtml(item.movementType)} · ${escapeHtml(item.player || "")} ${item.fromTeam ? `from ${escapeHtml(item.fromTeam)}` : ""} ${item.toTeam ? `to ${escapeHtml(item.toTeam)}` : ""}</small>
+        </div>
+        <b>${escapeHtml(item.status)}</b>
+      </header>
+      <div class="decision-grid">
+        <span>System</span><strong>${escapeHtml(item.systemDecision)}</strong>
+        <span>Confidence</span><strong>${item.systemConfidenceScore}/100</strong>
+        <span>Hard rules</span><small>${hard.map(escapeHtml).join(", ")}</small>
+        <span>Soft flags</span><small>${soft.map(escapeHtml).join(", ")}</small>
+        <span>Reasons</span><small>${reasons.map(escapeHtml).join("; ")}</small>
+      </div>
+      <label class="override-reason">
+        Override reason
+        <textarea data-movement-reason="${item.id}" placeholder="Required for any admin override">${escapeHtml(item.adminOverrideReason || "")}</textarea>
+      </label>
+      <div class="movement-actions admin-only">
+        <button class="solid-button" type="button" data-movement-action="ADMIN_APPROVED" data-movement-id="${item.id}" data-movement-type="${item.movementType}">Approve</button>
+        <button class="ghost-button danger" type="button" data-movement-action="ADMIN_DENIED" data-movement-id="${item.id}" data-movement-type="${item.movementType}">Deny</button>
+        <button class="ghost-button" type="button" data-movement-action="ADMIN_OVERRIDDEN" data-movement-id="${item.id}" data-movement-type="${item.movementType}">Override</button>
+      </div>
+      ${item.status === "ADMIN_OVERRIDDEN" ? `<em class="override-badge">Override saved by ${escapeHtml(item.adminId || "staff")}</em>` : ""}
+    </article>
+  `;
+}
+
+function renderMovementDashboard() {
+  const target = document.querySelector("#movementDashboard");
+  const summary = document.querySelector("#adminMovementSummary");
+  const sections = [
+    ["Auto-approved moves", "AUTO_APPROVED"],
+    ["Auto-denied moves", "AUTO_DENIED"],
+    ["Needs review", "NEEDS_REVIEW"],
+    ["Emergency review", "EMERGENCY_REVIEW"],
+    ["Admin overrides", "ADMIN_OVERRIDDEN"],
+  ];
+
+  if (summary) {
+    summary.innerHTML = sections
+      .map(([label, status]) => `<article><span>${label}</span><strong>${movementStore.requests.filter((item) => item.status === status).length}</strong><small>${status}</small></article>`)
+      .join("");
+  }
+
+  if (!target) return;
+  target.innerHTML = [
+    ...sections.map(([label, status]) => {
+      const cards = movementStore.requests.filter((item) => item.status === status).map(renderMovementCard).join("");
+      return `<section class="movement-section"><h3>${label}</h3>${cards || `<article class="empty-state"><strong>No items</strong><small>${status} queue is clear.</small></article>`}</section>`;
+    }),
+    `<section class="movement-section"><h3>Movement history</h3>${movementStore.history
+      .map((item) => `<article class="history-card"><span>${escapeHtml(item.movementType)}</span><div><strong>${escapeHtml(item.originalDecision)} to ${escapeHtml(item.finalDecision)}</strong><small>${escapeHtml(item.movementId)} · ${item.reasons.map(escapeHtml).join("; ")}</small></div><b>${new Date(item.createdAt).toLocaleDateString()}</b></article>`)
+      .join("")}</section>`,
+  ].join("");
+
+  target.querySelectorAll("[data-movement-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const reason = document.querySelector(`[data-movement-reason="${button.dataset.movementId}"]`)?.value || "";
+      const saved = adminOverrideMovement(button.dataset.movementId, button.dataset.movementType, button.dataset.movementAction, reason, currentUserName());
+      if (saved) {
+        renderMovementDashboard();
+        renderWaivers();
+        showToast(`${saved.title} saved as ${saved.status}.`);
+      }
+    });
+  });
+}
+
+function renderJurisdictionRulesPanel() {
+  const version = document.querySelector("#jurisdictionVersion");
+  const list = document.querySelector("#jurisdictionRulesList");
+  const history = document.querySelector("#jurisdictionHistoryList");
+  const overrides = document.querySelector("#eligibilityOverrideHistory");
+  if (version) version.textContent = jurisdictionRules.version;
+
+  if (list) {
+    const states = Object.entries(jurisdictionRules.states).sort(([a], [b]) => a.localeCompare(b));
+    list.innerHTML = states.length
+      ? states
+          .map(
+            ([state, rule]) => `
+              <article class="jurisdiction-rule-card">
+                <div><strong>${state}</strong><small>${escapeHtml(rule.reason)}</small></div>
+                <span>${escapeHtml(rule.payoutEligibility)}</span>
+                <small>${rule.requiresManualReview ? "Manual review" : rule.freePlayAllowed ? "Free play allowed" : "Blocked"} · updated ${rule.lastUpdatedAt ? new Date(rule.lastUpdatedAt).toLocaleDateString() : "default"}</small>
+              </article>
+            `,
+          )
+          .join("")
+      : `<article class="empty-state"><strong>No restricted states configured</strong><small>Default rule is ${escapeHtml(jurisdictionRules.defaultRule)}.</small></article>`;
+  }
+
+  if (history) {
+    history.innerHTML = jurisdictionRuleHistory.length
+      ? jurisdictionRuleHistory
+          .map(
+            (item) => `
+              <article class="movement-card">
+                <header><div><strong>${escapeHtml(item.state)}</strong><small>${escapeHtml(item.adminId)} · ${new Date(item.timestamp).toLocaleString()}</small></div><b>Rule change</b></header>
+                <small>${item.newRule ? escapeHtml(item.newRule.reason || "Rule updated") : "State removed from restricted list"}</small>
+              </article>
+            `,
+          )
+          .join("")
+      : `<article class="empty-state"><strong>No rule changes yet</strong><small>Compliance changes will be logged here.</small></article>`;
+  }
+
+  if (overrides) {
+    overrides.innerHTML = eligibilityOverrideHistory.length
+      ? eligibilityOverrideHistory
+          .map(
+            (item) => `
+              <article class="movement-card admin-overridden">
+                <header><div><strong>${escapeHtml(item.playerId)}</strong><small>${escapeHtml(item.overrideReason)} · ${new Date(item.timestamp).toLocaleString()}</small></div><b>${escapeHtml(item.finalStatus)}</b></header>
+                <small>${escapeHtml(item.originalStatus)} to ${escapeHtml(item.finalStatus)} · ${escapeHtml(item.adminId)}</small>
+              </article>
+            `,
+          )
+          .join("")
+      : `<article class="empty-state"><strong>No eligibility overrides</strong><small>Every override requires a reason and admin ID.</small></article>`;
+  }
+}
+
+function freeAgentEntries() {
+  const undrafted = draftProspects.filter((prospect) => !prospect.drafted).map((prospect) => ({ name: prospect.name, position: prospect.position, detail: `${prospect.build} · ${prospect.city}`, source: "Undrafted pool" }));
+  const released = players.filter((player) => player.teamRole === "Free Agent").map((player) => ({ name: player.name, position: player.position, detail: `${player.tag} · ${player.ppg} PPG · ${player.identityStatus}`, source: "Released or unsigned" }));
+  return [...undrafted, ...released];
+}
+
+function renderFreeAgency() {
+  const target = document.querySelector("#freeAgentPool");
+  const count = document.querySelector("#freeAgentCount");
+  if (!target) return;
+  const entries = freeAgentEntries();
+  if (count) count.textContent = `${entries.length} available`;
+  target.innerHTML = entries.map((agent) => `<article class="movement-card"><header><div><strong>${escapeHtml(agent.name)}</strong><small>${escapeHtml(agent.position)} · ${escapeHtml(agent.detail)}</small></div><b>${escapeHtml(agent.source)}</b></header><button class="solid-button" type="button" data-tryout-player="${escapeHtml(agent.name)}">Apply for tryout</button></article>`).join("");
+  target.querySelectorAll("[data-tryout-player]").forEach((button) => {
+    button.addEventListener("click", () => showToast(`${button.dataset.tryoutPlayer} tryout request sent to team owners.`));
+  });
+}
+
+function renderWaivers() {
+  const target = document.querySelector("#waiverWire");
+  if (!target) return;
+  const waivers = movementStore.requests.filter((item) => item.movementType === "waiverClaim");
+  target.innerHTML = waivers.map(renderMovementCard).join("") || `<article class="empty-state"><strong>No waiver claims</strong><small>Released players will appear here for claim order.</small></article>`;
+}
+
+function renderMmrRankings() {
+  const target = document.querySelector("#mmrRankings");
+  if (!target) return;
+  const ranked = [...rankedPlayers].sort((first, second) => second.mmr - first.mmr);
+  target.innerHTML = `
+    <div class="ranking-row head"><span>#</span><span>Player</span><span>MMR</span><span>Reliability</span></div>
+    ${ranked
+      .map(
+        (player, index) => `
+          <article class="ranking-row">
+            <span>${index + 1}</span>
+            <div><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.gamertag)} · ${escapeHtml(player.position)} · ${escapeHtml(player.teamId)}</small><em>${escapeHtml(player.tier)} · Draft ${escapeHtml(player.draftGrade)} · ${escapeHtml((player.recentForm || []).join(""))}</em></div>
+            <strong>${player.mmr}</strong>
+            <small>${player.reliability}/100 · ${player.wins}-${player.losses}</small>
+          </article>
+        `,
+      )
+      .join("")}
+  `;
+}
+
+function renderMatchResultForm() {
+  const target = document.querySelector("#matchPlayerStatsForm");
+  if (!target) return;
+  const statKeys = [
+    ["points", "PTS", 12],
+    ["assists", "AST", 4],
+    ["rebounds", "REB", 5],
+    ["steals", "STL", 1],
+    ["blocks", "BLK", 0],
+    ["turnovers", "TO", 2],
+    ["fgm", "FGM", 5],
+    ["fga", "FGA", 10],
+    ["threePm", "3PM", 1],
+    ["threePa", "3PA", 3],
+    ["fouls", "FLS", 1],
+  ];
+  target.innerHTML = rankedPlayers
+    .slice(0, 10)
+    .map((player) => `<article><div><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.position)} · ${escapeHtml(player.teamId)}</small></div>${statKeys.map(([key, label, value]) => `<label><span>${label}</span><input data-stat-player="${player.id}" data-stat-key="${key}" type="number" value="${value}" aria-label="${escapeHtml(player.name)} ${label}" /></label>`).join("")}</article>`)
+    .join("");
+}
+
+function submitMmrResultFromForm() {
+  const teamA = document.querySelector("#mmrTeamA")?.value.trim() || "Shockers";
+  const teamB = document.querySelector("#mmrTeamB")?.value.trim() || "Sharks";
+  const winner = document.querySelector("#mmrWinner")?.value.trim() || teamA;
+  const behaviorPenalty = Number(document.querySelector("#mmrBehaviorPenalty")?.value || 0);
+  const teamAPlayers = rankedPlayers.filter((player) => player.teamId === teamA);
+  const teamBPlayers = rankedPlayers.filter((player) => player.teamId === teamB);
+  const avgA = teamAPlayers.reduce((total, player) => total + player.mmr, 0) / Math.max(1, teamAPlayers.length);
+  const avgB = teamBPlayers.reduce((total, player) => total + player.mmr, 0) / Math.max(1, teamBPlayers.length);
+
+  rankedPlayers = rankedPlayers.map((player) => {
+    if (![teamA, teamB].includes(player.teamId)) return player;
+    const stats = {};
+    document.querySelectorAll(`[data-stat-player="${player.id}"]`).forEach((input) => {
+      stats[input.dataset.statKey] = Number(input.value || 0);
+    });
+    return window.MCPA_MMR.updatePlayerMmr(player, { won: player.teamId === winner, playerTeamAvgMmr: player.teamId === teamA ? avgA : avgB, opponentTeamAvgMmr: player.teamId === teamA ? avgB : avgA, stats, behaviorPenalty });
+  });
+  persistRankedPlayers();
+  renderMmrRankings();
+  renderMatchResultForm();
+  showToast("MMR, tiers, reliability, draft grades, and rating history updated.");
+}
+
+function renderLeagueBracketBoard() {
+  const target = document.querySelector("#leagueBracketBoard");
+  if (!target) return;
+  const cupSeeds = seedCupKnockoutTeams();
+  target.innerHTML = `
+    <section class="movement-section"><h3>Playoff bracket</h3><div class="playoff-picture">${document.querySelector(".playoff-picture")?.innerHTML || ""}</div></section>
+    <section class="movement-section"><h3>Midseason Cup bracket</h3><div class="bracket">${cupSeeds.map((team) => `<article><span>${team.knockoutSeed}</span><strong>${escapeHtml(team.teamId)}</strong><small>${escapeHtml(team.cupStatus)}</small></article>`).join("")}</div></section>
+  `;
+}
+
+function renderCup() {
+  updateCupStandings();
+  const dashboard = document.querySelector("#cupDashboard");
+  const groups = document.querySelector("#cupGroupStandings");
+  const schedule = document.querySelector("#cupGroupSchedule");
+  const bracket = document.querySelector("#cupKnockoutBracket");
+  const finalPanel = document.querySelector("#cupFinalPanel");
+  const statsPanel = document.querySelector("#cupStatsPanel");
+  const championHistory = document.querySelector("#cupChampionHistory");
+  const adminQueue = document.querySelector("#cupAdminReviewQueue");
+  const overrideHistory = document.querySelector("#cupOverrideHistory");
+  const finalists = cupState.knockoutGames.filter((game) => game.type === "CUP_FINAL");
+
+  if (dashboard) {
+    dashboard.innerHTML = `<article><span>Status</span><strong>${cupState.status}</strong><small>NOT_STARTED · GROUP_STAGE · KNOCKOUT · COMPLETED</small></article><article><span>Groups</span><strong>3x4</strong><small>12 teams</small></article><article><span>Knockout</span><strong>${cupState.knockoutTeams.length}/4</strong><small>3 winners + wild card</small></article><article><span>Champion</span><strong>${cupState.championId || "TBD"}</strong><small>Final winner</small></article>`;
+  }
+  if (groups) {
+    groups.innerHTML = cupState.groups
+      .map((group) => `<article class="cup-group"><h3>${group.name}</h3>${cupState.standings.filter((team) => team.groupId === group.id).sort(cupSort).map((team) => `<div><strong>${escapeHtml(team.teamId)}</strong><span>${team.wins}-${team.losses}</span><small>PD ${team.pd} · ${team.cupStatus}</small></div>`).join("")}</article>`)
+      .join("");
+  }
+  if (schedule) {
+    schedule.innerHTML = cupState.games
+      .map((game) => `<article class="game-card locked-time-card"><div class="game-main"><strong>${escapeHtml(game.homeTeamId)} vs ${escapeHtml(game.awayTeamId)}</strong><small>${escapeHtml(game.type)} · MMR ${game.mmrMultiplier}x · counts toward season</small></div><span class="game-status">${game.status}</span><button class="ghost-button admin-only" type="button" data-cup-result="${game.id}">Submit</button></article>`)
+      .join("");
+    schedule.querySelectorAll("[data-cup-result]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const game = cupState.games.find((item) => item.id === button.dataset.cupResult);
+        submitCupGameResult(game.id, game.homeTeamId, { [game.homeTeamId]: 82, [game.awayTeamId]: 74 });
+        renderCup();
+        renderLeagueBracketBoard();
+        showToast(`${game.homeTeamId} Cup result submitted.`);
+      });
+    });
+  }
+  if (bracket) {
+    const games = cupState.knockoutGames.length ? cupState.knockoutGames : generateCupKnockoutBracket();
+    bracket.innerHTML = games.map((game) => `<article><span>${game.type === "CUP_FINAL" ? "F" : "SF"}</span><strong>${escapeHtml(game.homeTeamId)} vs ${escapeHtml(game.awayTeamId)}</strong><small>${game.status}${game.winningTeamId ? ` · Winner ${escapeHtml(game.winningTeamId)}` : ""}</small></article>`).join("");
+  }
+  if (finalPanel) finalPanel.innerHTML = finalists.length ? finalists.map((game) => `<article class="movement-card"><header><div><strong>${escapeHtml(game.homeTeamId)} vs ${escapeHtml(game.awayTeamId)}</strong><small>CUP_FINAL · MMR 1.15x</small></div><b>${game.status}</b></header></article>`).join("") : `<article class="empty-state"><strong>Final pending</strong><small>Semifinal winners advance here.</small></article>`;
+  if (statsPanel) statsPanel.innerHTML = rankedPlayers.slice(0, 4).map((player) => `<article class="movement-card"><header><div><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.teamId)} · ${player.mmr} MMR · ${escapeHtml(player.tier)}</small></div><b>MVP race</b></header></article>`).join("");
+  if (championHistory) championHistory.innerHTML = cupState.history.filter((item) => item.actionType === "CUP_CHAMPION").map((item) => `<article class="history-card champion"><span>${new Date(item.createdAt).getFullYear()}</span><div><strong>${escapeHtml(item.details.teamId)}</strong><small>Midseason Cup Champion</small></div><b>champion</b></article>`).join("") || `<article class="empty-state"><strong>No Cup champion yet</strong><small>Complete the final to archive the winner.</small></article>`;
+  if (adminQueue) adminQueue.innerHTML = cupState.adminQueue.map((item) => `<article class="movement-card"><header><div><strong>${escapeHtml(item.teamId)}</strong><small>${escapeHtml(item.reason)}</small></div><b>${escapeHtml(item.decision)}</b></header><small>${item.flags.map(escapeHtml).join(", ") || "No flags"}</small></article>`).join("") || `<article class="empty-state"><strong>No Cup review items</strong><small>Eligibility and emergency requests appear here.</small></article>`;
+  if (overrideHistory) overrideHistory.innerHTML = cupState.overrides.map((item) => `<article class="movement-card"><header><div><strong>${escapeHtml(item.finalDecision)}</strong><small>${escapeHtml(item.overrideReason)}</small></div><b>${escapeHtml(item.adminId)}</b></header></article>`).join("") || `<article class="empty-state"><strong>No Cup overrides</strong><small>Every override requires a reason.</small></article>`;
+}
+
+function updateRecordBooksFromResult() {
+  const samples = [
+    { category: "Points", player: "DreLock", value: 31 },
+    { category: "Assists", player: "JCity", value: 11 },
+    { category: "Rebounds", player: "MaskOn", value: 12 },
+  ];
+  samples.forEach((sample) => {
+    const current = recordBooks.seasonHighs.find((record) => record.category === sample.category);
+    if (!current || sample.value >= current.value) {
+      recordBooks.seasonHighs = recordBooks.seasonHighs.filter((item) => item.category !== sample.category);
+      recordBooks.seasonHighs.unshift({ scope: "Season", category: sample.category, player: sample.player, value: sample.value, detail: "Updated from stat screenshot" });
+      const player = players.find((item) => item.name === sample.player);
+      if (player && !player.accolades.some((award) => award.includes(`Season high ${sample.category}`))) player.accolades.unshift(`Season high ${sample.category}: ${sample.value}`);
+    }
+  });
+  persistRecordBooks();
+}
+
+function renderHistoryBooks() {
+  const target = document.querySelector("#historyBooks");
+  if (!target) return;
+  const draftResults = draftPicks.filter((pick) => pick.prospectId).map((pick) => ({ category: `Round ${pick.round} Pick ${pick.pick}`, player: draftProspects.find((item) => item.id === pick.prospectId)?.name || "Open", value: pick.team, detail: `Overall ${pick.overall}` }));
+  const sections = [
+    ["Draft results", recordBooks.draftResults.length ? recordBooks.draftResults : draftResults],
+    ["League record book", recordBooks.leagueRecords],
+    ["Team record book", recordBooks.teamRecords],
+    ["Season highs", recordBooks.seasonHighs],
+  ];
+  target.innerHTML = sections
+    .map(([title, records]) => `<section class="movement-section"><h3>${title}</h3>${records.map((record) => `<article class="history-card"><span>${escapeHtml(record.scope || record.team || "MCPA")}</span><div><strong>${escapeHtml(record.category)} · ${escapeHtml(record.player)}</strong><small>${escapeHtml(record.detail || record.team || "")}</small></div><b>${escapeHtml(record.value)}</b></article>`).join("") || `<article class="empty-state"><strong>No records yet</strong><small>Records update from draft and stat screenshot submissions.</small></article>`}</section>`)
+    .join("");
 }
 
 function renderLeagueRules() {
@@ -1759,6 +3167,193 @@ function setupMentionInput(inputSelector, traySelector) {
   input.addEventListener("keyup", render);
   input.addEventListener("click", render);
   input.addEventListener("blur", () => window.setTimeout(() => tray.classList.remove("is-open"), 160));
+}
+
+function activeCommunityRoom() {
+  return rooms.find((room) => room.id === activeCommunityRoomId) || rooms[0];
+}
+
+function persistCommunityChat() {
+  writeStore("mcpaCommunityMessages", communityMessages);
+  writeStore("mcpaActiveCommunityRoom", activeCommunityRoomId);
+}
+
+function formatChatTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Now";
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function renderChatRooms() {
+  const picker = document.querySelector("#chatRoomPicker");
+  const pill = document.querySelector("#voiceRoomCount");
+  const current = document.querySelector("#chatCurrentRoom");
+  if (!picker || !pill || !current) return;
+
+  pill.textContent = `${rooms.length} rooms`;
+  current.textContent = activeCommunityRoom().name;
+  picker.innerHTML = rooms
+    .map((room) => {
+      const roomMessages = communityMessages.filter((message) => message.roomId === room.id).length;
+      const unread = room.unreadCount ? `<small>${room.unreadCount} new</small>` : `<small>${roomMessages} msgs</small>`;
+      return `
+        <button class="${room.id === activeCommunityRoomId ? "active" : ""}" type="button" data-chat-room="${escapeHtml(room.id)}">
+          <span>${escapeHtml(room.name)}</span>
+          ${unread}
+        </button>
+      `;
+    })
+    .join("");
+
+  picker.querySelectorAll("[data-chat-room]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeCommunityRoomId = button.dataset.chatRoom;
+      picker.hidden = true;
+      pill.setAttribute("aria-expanded", "false");
+      renderChatRooms();
+      renderMessages();
+      scrollToBottom();
+      showToast(`${activeCommunityRoom().name} chat opened.`);
+    });
+  });
+}
+
+function renderMessages() {
+  const target = document.querySelector("#chatWindow");
+  if (!target) return;
+
+  const visibleMessages = communityMessages.filter((message) => message.roomId === activeCommunityRoomId);
+  target.innerHTML = visibleMessages
+    .map((message) => {
+      const mine = message.senderId === "me";
+      const adminClass = message.isAdmin ? "admin" : "";
+      return `
+        <article class="chat-message ${mine ? "mine" : ""}">
+          <span class="chat-avatar">${escapeHtml(message.avatarInitials || initialsFromName(message.senderName))}</span>
+          <div class="chat-bubble">
+            <div class="chat-meta">
+              <strong class="${adminClass}">${escapeHtml(message.senderName)}</strong>
+              <time datetime="${escapeHtml(message.createdAt)}">${escapeHtml(formatChatTime(message.createdAt))}</time>
+            </div>
+            <p class="chat-text">${formatMessageText(message.text)}</p>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function scrollToBottom() {
+  const target = document.querySelector("#chatWindow");
+  if (!target) return;
+  window.requestAnimationFrame(() => {
+    target.scrollTop = target.scrollHeight;
+  });
+}
+
+function getTypingText(activeUsers = typingUsers) {
+  const now = Date.now();
+  const names = activeUsers
+    .filter((user) => user.roomId === activeCommunityRoomId && now - user.lastTypingAt < 2500)
+    .map((user) => user.name);
+
+  if (!names.length) return "";
+  if (names.length === 1) return `${names[0]} is typing`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} are typing`;
+  return `${names.length} people are typing`;
+}
+
+function showTypingIndicator() {
+  const indicator = document.querySelector("#typingIndicator");
+  const text = document.querySelector("#typingText");
+  if (!indicator || !text) return;
+
+  const typingText = getTypingText();
+  indicator.hidden = !typingText || chatMode !== "text" || !document.querySelector("#screen-chat")?.classList.contains("active");
+  text.textContent = typingText;
+}
+
+function hideTypingIndicator() {
+  typingUsers = typingUsers.filter((user) => Date.now() - user.lastTypingAt < 2500);
+  writeStore("mcpaTypingUsers", typingUsers);
+  showTypingIndicator();
+}
+
+function handleTyping() {
+  const input = document.querySelector("#chatInput");
+  if (!input) return;
+
+  window.clearTimeout(typingDebounceTimer);
+  typingDebounceTimer = window.setTimeout(() => {
+    if (!input.value.trim()) {
+      typingUsers = typingUsers.filter((user) => user.id !== "me");
+      hideTypingIndicator();
+      return;
+    }
+
+    // Future backend: typing events should be sent through WebSocket/Supabase Realtime/Firebase so other connected users can see live typing status.
+    const selfTyping = {
+      id: "me",
+      name: currentUserName(),
+      roomId: activeCommunityRoomId,
+      lastTypingAt: Date.now(),
+    };
+    typingUsers = [selfTyping, ...typingUsers.filter((user) => user.id !== "me")];
+    writeStore("mcpaTypingUsers", typingUsers);
+    showTypingIndicator();
+
+    window.clearTimeout(typingClearTimer);
+    typingClearTimer = window.setTimeout(() => {
+      typingUsers = typingUsers.filter((user) => user.id !== "me");
+      hideTypingIndicator();
+    }, 2500);
+  }, 140);
+}
+
+function simulateDemoTyping() {
+  if (chatMode !== "text" || activeCommunityRoomId !== "general" || !document.querySelector("#screen-chat")?.classList.contains("active")) return;
+  typingUsers = [
+    {
+      id: "user-1",
+      name: "Travon Admin",
+      roomId: "general",
+      lastTypingAt: Date.now(),
+    },
+    ...typingUsers.filter((user) => user.id !== "user-1"),
+  ];
+  writeStore("mcpaTypingUsers", typingUsers);
+  showTypingIndicator();
+  window.setTimeout(() => {
+    typingUsers = typingUsers.filter((user) => user.id !== "user-1");
+    hideTypingIndicator();
+  }, 2300);
+}
+
+function sendMessage(event) {
+  event.preventDefault();
+  const input = document.querySelector("#chatInput");
+  const text = input?.value.trim();
+  if (!input || !text) return;
+
+  communityMessages.push({
+    id: `msg-${Date.now()}`,
+    roomId: activeCommunityRoomId,
+    senderId: "me",
+    senderName: currentUserName(),
+    senderRole: accountState.role === "admin" ? "Staff" : "Player",
+    avatarInitials: initialsFromName(currentUserName()),
+    text,
+    createdAt: new Date().toISOString(),
+    isAdmin: accountState.role === "admin",
+  });
+  input.value = "";
+  window.clearTimeout(typingDebounceTimer);
+  typingUsers = typingUsers.filter((user) => user.id !== "me");
+  persistCommunityChat();
+  hideTypingIndicator();
+  renderChatRooms();
+  renderMessages();
+  scrollToBottom();
 }
 
 function activeDmThread() {
@@ -1977,9 +3572,73 @@ function cleanSelfFromOtherRooms(roomId) {
   });
 }
 
+function touchVoiceRoom(room) {
+  if (room) {
+    room.lastActiveAt = Date.now();
+  }
+}
+
+function cleanupVoiceRooms(announce = false) {
+  const now = Date.now();
+  let disconnectedRoom = "";
+
+  voiceRooms.forEach((room) => {
+    if (!room.lastActiveAt) room.lastActiveAt = now;
+    if (room.members.some((member) => member.speaking && !member.muted && !member.deafened)) {
+      room.lastActiveAt = now;
+    }
+    if (room.members.length && now - room.lastActiveAt >= voiceInactiveLimit) {
+      if (joinedVoiceRoomId === room.id) {
+        disconnectedRoom = room.name;
+        joinedVoiceRoomId = null;
+      }
+      room.members = [];
+    }
+  });
+
+  for (let index = voiceRooms.length - 1; index >= 0; index -= 1) {
+    if (!voiceRooms[index].members.length) {
+      if (joinedVoiceRoomId === voiceRooms[index].id) joinedVoiceRoomId = null;
+      voiceRooms.splice(index, 1);
+    }
+  }
+
+  if (!voiceRooms.some((room) => room.id === activeVoiceRoomId)) {
+    activeVoiceRoomId = voiceRooms[0]?.id || null;
+  }
+
+  if (announce && disconnectedRoom) {
+    showToast(`${disconnectedRoom} closed after 30 minutes of no voice activity.`);
+  }
+}
+
+function refreshVoiceUI() {
+  cleanupVoiceRooms();
+  renderVoiceRooms();
+  renderVoiceStage();
+  renderVoiceMiniBar();
+}
+
+function setChatMode(mode) {
+  chatMode = mode;
+  document.querySelectorAll("[data-chat-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.chatMode === mode);
+  });
+  document.querySelectorAll("[data-chat-panel]").forEach((panel) => {
+    panel.classList.toggle("active", panel.dataset.chatPanel === mode);
+  });
+  showTypingIndicator();
+  if (mode === "text") {
+    window.setTimeout(scrollToBottom, 80);
+  } else {
+    showToast("Voice rooms coming soon.");
+  }
+}
+
 function renderVoiceRooms() {
   const target = document.querySelector("#voiceRoomList");
   const count = document.querySelector("#voiceRoomCount");
+  cleanupVoiceRooms();
   if (!target) return;
 
   if (count) {
@@ -2018,6 +3677,7 @@ function renderVoiceRooms() {
       activeVoiceRoomId = button.dataset.voiceRoom;
       renderVoiceRooms();
       renderVoiceStage();
+      renderVoiceMiniBar();
       const room = activeVoiceRoom();
       showToast(room.locked ? `${room.name} preview opened. Joining requires team or staff access.` : `${room.name} selected.`);
     });
@@ -2029,11 +3689,27 @@ function renderVoiceStage() {
   const roomName = document.querySelector("#activeVoiceRoomName");
   const roomMeta = document.querySelector("#activeVoiceRoomMeta");
   const joinButton = document.querySelector("#joinVoiceRoom");
-  const speakerButton = document.querySelector("#toggleSpeaker");
+  const outputButton = document.querySelector("#toggleVoiceOutput");
+  const deafenButton = document.querySelector("#toggleDeafen");
   const micButton = document.querySelector("#toggleMic");
   const leaveButton = document.querySelector("#leaveVoiceRoom");
   const participants = document.querySelector("#voiceParticipants");
-  if (!room || !participants) return;
+  if (!participants) return;
+
+  if (!room) {
+    if (roomName) roomName.textContent = "No active rooms";
+    if (roomMeta) roomMeta.textContent = "Voice rooms appear when players create or join them.";
+    if (joinButton) {
+      joinButton.disabled = true;
+      joinButton.textContent = "Join";
+    }
+    [outputButton, deafenButton, micButton, leaveButton].forEach((button) => {
+      if (button) button.disabled = true;
+    });
+    participants.innerHTML = `<article class="empty-state"><strong>No active voice chats</strong><small>Create one when your team needs a room.</small></article>`;
+    renderVoiceMiniBar();
+    return;
+  }
 
   const joinedThisRoom = joinedVoiceRoomId === room.id;
   const lockedForPlayer = room.locked && accountState.role !== "admin";
@@ -2044,7 +3720,7 @@ function renderVoiceStage() {
 
   if (roomMeta) {
     roomMeta.textContent = joinedThisRoom
-      ? `${room.members.length} in room · ${speakerOn ? "speaker on" : "speaker off"} · ${micMuted ? "mic muted" : "mic live"}`
+      ? `${room.members.length} in room · ${voiceOutput === "speaker" ? "speaker" : "bluetooth"} · ${voiceDeafened ? "deafened" : "listening"} · ${micMuted ? "mic muted" : "mic live"}`
       : `${room.members.length} inside · preview before joining · ${room.topic}`;
   }
 
@@ -2053,9 +3729,14 @@ function renderVoiceStage() {
     joinButton.textContent = joinedThisRoom ? "Joined" : lockedForPlayer ? "Locked" : "Join";
   }
 
-  if (speakerButton) {
-    speakerButton.disabled = !joinedThisRoom;
-    speakerButton.textContent = speakerOn ? "Speaker on" : "Speaker off";
+  if (outputButton) {
+    outputButton.disabled = !joinedThisRoom;
+    outputButton.textContent = voiceOutput === "speaker" ? "Speaker" : "Bluetooth";
+  }
+
+  if (deafenButton) {
+    deafenButton.disabled = !joinedThisRoom;
+    deafenButton.textContent = voiceDeafened ? "Undeafen" : "Deafen";
   }
 
   if (micButton) {
@@ -2123,6 +3804,22 @@ function renderVoiceStage() {
   participants.querySelectorAll("[data-voice-kick]").forEach((button) => {
     button.addEventListener("click", () => adminKickMember(button.dataset.voiceKick));
   });
+
+  renderVoiceMiniBar();
+}
+
+function renderVoiceMiniBar() {
+  const bar = document.querySelector("#voiceMiniBar");
+  const room = joinedVoiceRoom();
+  if (!bar) return;
+
+  bar.classList.toggle("is-hidden", !room);
+  if (!room) return;
+
+  document.querySelector("#miniVoiceRoom").textContent = room.name;
+  document.querySelector("#miniVoiceState").textContent = `${micMuted ? "Mic muted" : "Mic live"} · ${voiceDeafened ? "Deafened" : voiceOutput === "speaker" ? "Speaker" : "Bluetooth"} · background voice on`;
+  document.querySelector("#miniToggleMic")?.classList.toggle("is-active", micMuted);
+  document.querySelector("#miniToggleDeafen")?.classList.toggle("is-active", voiceDeafened);
 }
 
 function joinVoiceRoom() {
@@ -2140,7 +3837,7 @@ function joinVoiceRoom() {
   if (existingMember) {
     existingMember.self = true;
     existingMember.muted = micMuted;
-    existingMember.deafened = false;
+    existingMember.deafened = voiceDeafened;
   } else {
     room.members.push({
       name: userName,
@@ -2148,16 +3845,16 @@ function joinVoiceRoom() {
       initials: initialsFromName(userName),
       speaking: false,
       muted: micMuted,
-      deafened: false,
+      deafened: voiceDeafened,
       votes: 0,
       self: true,
     });
   }
 
   joinedVoiceRoomId = room.id;
-  renderVoiceRooms();
-  renderVoiceStage();
-  showToast(`Joined ${room.name}. Mic and speaker controls are active.`);
+  touchVoiceRoom(room);
+  refreshVoiceUI();
+  showToast(`Joined ${room.name}. Voice stays connected while you browse other screens.`);
 }
 
 function createVoiceRoom(event) {
@@ -2175,6 +3872,7 @@ function createVoiceRoom(event) {
     type: "Player-created",
     locked: false,
     topic: `Created by ${userName}. Invite players with @mentions in chat.`,
+    lastActiveAt: Date.now(),
     members: [
       {
         name: userName,
@@ -2182,7 +3880,7 @@ function createVoiceRoom(event) {
         initials: initialsFromName(userName),
         speaking: false,
         muted: micMuted,
-        deafened: false,
+        deafened: voiceDeafened,
         votes: 0,
         self: true,
       },
@@ -2192,8 +3890,7 @@ function createVoiceRoom(event) {
   activeVoiceRoomId = roomId;
   joinedVoiceRoomId = roomId;
   input.value = "";
-  renderVoiceRooms();
-  renderVoiceStage();
+  refreshVoiceUI();
   showToast(`${roomName} voice chat created.`);
 }
 
@@ -2204,8 +3901,7 @@ function leaveVoiceRoom() {
   const userName = currentUserName();
   room.members = room.members.filter((member) => !(member.self || member.name === userName));
   joinedVoiceRoomId = null;
-  renderVoiceRooms();
-  renderVoiceStage();
+  refreshVoiceUI();
   showToast(`Left ${room.name}.`);
 }
 
@@ -2217,17 +3913,32 @@ function toggleMic() {
   const self = room?.members.find((member) => member.self || member.name === userName);
   if (self) {
     self.muted = micMuted;
-    self.speaking = !micMuted && self.speaking;
+    self.speaking = !micMuted;
   }
+  touchVoiceRoom(room);
   renderVoiceStage();
   showToast(micMuted ? "Mic muted." : "Mic unmuted.");
 }
 
-function toggleSpeaker() {
+function toggleVoiceOutput() {
   if (!joinedVoiceRoomId) return;
-  speakerOn = !speakerOn;
+  voiceOutput = voiceOutput === "speaker" ? "bluetooth" : "speaker";
   renderVoiceStage();
-  showToast(speakerOn ? "Speaker output is on." : "Speaker output is off.");
+  showToast(voiceOutput === "speaker" ? "Voice output set to speaker." : "Voice output set to Bluetooth.");
+}
+
+function toggleDeafen() {
+  if (!joinedVoiceRoomId) return;
+  voiceDeafened = !voiceDeafened;
+  const room = joinedVoiceRoom();
+  const userName = currentUserName();
+  const self = room?.members.find((member) => member.self || member.name === userName);
+  if (self) {
+    self.deafened = voiceDeafened;
+    if (voiceDeafened) self.speaking = false;
+  }
+  renderVoiceStage();
+  showToast(voiceDeafened ? "Voice chat deafened." : "Voice chat audio restored.");
 }
 
 function voteKickMember(memberName) {
@@ -2239,13 +3950,13 @@ function voteKickMember(memberName) {
   const needed = Math.floor(room.members.length / 2) + 1;
   if (member.votes >= needed) {
     room.members = room.members.filter((item) => item.name !== memberName);
+    if (member.self || member.name === currentUserName()) joinedVoiceRoomId = null;
     showToast(`${memberName} was majority voted out of ${room.name}.`);
   } else {
     showToast(`${memberName} has ${member.votes}/${needed} votes to leave ${room.name}.`);
   }
 
-  renderVoiceRooms();
-  renderVoiceStage();
+  refreshVoiceUI();
 }
 
 function reportVoiceMember(memberName) {
@@ -2275,8 +3986,7 @@ function adminDeafenMember(memberName) {
 
   member.deafened = true;
   member.speaking = false;
-  renderVoiceRooms();
-  renderVoiceStage();
+  refreshVoiceUI();
   showToast(`${memberName} was deafened by staff.`);
 }
 
@@ -2290,8 +4000,8 @@ function adminKickMember(memberName) {
   if (!room) return;
 
   room.members = room.members.filter((member) => member.name !== memberName);
-  renderVoiceRooms();
-  renderVoiceStage();
+  if (memberName === currentUserName()) joinedVoiceRoomId = null;
+  refreshVoiceUI();
   showToast(`${memberName} was kicked from ${room.name}.`);
 }
 
@@ -2301,6 +4011,18 @@ function currentDraftPick() {
 
 function availableProspects() {
   return draftProspects.filter((prospect) => !prospect.drafted);
+}
+
+function bestAvailableProspect(teamName) {
+  const available = availableProspects();
+  if (!available.length) return null;
+
+  const counts = ["PG", "SG", "SF", "PF", "C"].map((position) => ({
+    position,
+    count: players.filter((player) => player.team === teamName && player.position === position).length,
+  }));
+  const positionNeed = counts.sort((first, second) => first.count - second.count)[0]?.position;
+  return available.find((prospect) => prospect.position === positionNeed) || available[0];
 }
 
 function formatDraftClock(seconds) {
@@ -2418,6 +4140,12 @@ function renderDraftRoom() {
   renderDraftPool();
   renderDraftBoard();
   renderDraftHistory();
+  const resetButton = document.querySelector("#resetDraft");
+  const startButton = document.querySelector("#startDraft");
+  const pickButton = document.querySelector("#makeDraftPick");
+  if (resetButton) resetButton.disabled = draftRunning;
+  if (startButton) startButton.disabled = draftRunning || !availableProspects().length;
+  if (pickButton) pickButton.disabled = !currentDraftPick() || !availableProspects().length;
 }
 
 function assignDraftedPlayer(prospect, teamName) {
@@ -2471,7 +4199,9 @@ function advanceDraftPick() {
 
 function makeDraftPick(options = {}) {
   const pick = currentDraftPick();
-  const prospect = draftProspects.find((item) => item.id === selectedProspectId && !item.drafted) || availableProspects()[0];
+  const prospect = options.auto
+    ? bestAvailableProspect(pick?.team)
+    : draftProspects.find((item) => item.id === selectedProspectId && !item.drafted) || bestAvailableProspect(pick?.team);
 
   if (!pick) {
     showToast("Draft is complete. Every pick has been recorded.");
@@ -2495,14 +4225,22 @@ function makeDraftPick(options = {}) {
   prospect.drafted = true;
   prospect.status = `${pick.team} · Round ${pick.round} Pick ${pick.pick}`;
   assignDraftedPlayer(prospect, pick.team);
+  recordBooks.draftResults.unshift({ scope: "Draft", category: `Round ${pick.round} Pick ${pick.pick}`, player: prospect.name, value: pick.team, detail: `Overall ${pick.overall}` });
+  persistRecordBooks();
   selectedProspectId = availableProspects()[0]?.id || null;
   document.querySelector("#draftTicker").textContent = `${pick.team} selected ${prospect.name} (${prospect.position}) at Round ${pick.round}, Pick ${pick.pick}.`;
   advanceDraftPick();
+  if (!currentDraftPick()) {
+    document.querySelector("#draftTicker").textContent = "Draft complete. Final team-role notifications have been sent to every drafted player.";
+    showToast("Draft complete. Players were assigned to team roles and notified.");
+  }
   renderDraftRoom();
   renderPlayers();
   renderStatLeaders();
   renderLiveStreams();
   renderTeamPage();
+  renderFreeAgency();
+  renderHistoryBooks();
 }
 
 function tickDraftClock() {
@@ -2516,6 +4254,11 @@ function tickDraftClock() {
 }
 
 function startDraft() {
+  if (draftRunning) {
+    showToast("The draft is already live and cannot be stopped once started.");
+    return;
+  }
+
   if (!availableProspects().length) {
     showToast("No registered players are available in the draft pool.");
     return;
@@ -2524,19 +4267,20 @@ function startDraft() {
   draftRunning = true;
   window.clearInterval(draftTimer);
   draftTimer = window.setInterval(tickDraftClock, 1000);
-  document.querySelector("#draftTicker").textContent = "Draft started. Each team has 1 minute to make a pick.";
+  document.querySelector("#draftTicker").textContent = "Draft started. Captains and players were notified. Each team has 1 minute to make a pick.";
   renderDraftRoom();
 }
 
 function pauseDraft() {
-  draftRunning = false;
-  window.clearInterval(draftTimer);
-  draftTimer = null;
-  document.querySelector("#draftTicker").textContent = "Draft paused. Pick history is saved.";
-  renderDraftRoom();
+  showToast("Draft cannot be paused once it starts. Missed picks auto-draft best available fit.");
 }
 
 function resetDraft() {
+  if (draftRunning) {
+    showToast("Draft is live. It cannot be reset or stopped once started.");
+    return;
+  }
+
   window.clearInterval(draftTimer);
   draftTimer = null;
   draftRunning = false;
@@ -2595,9 +4339,46 @@ document.querySelectorAll("[data-login-role]").forEach((button) => {
   });
 });
 
-document.querySelectorAll("#signupName, #signupEmail, #signupAge, #signupPosition, #signupCity, #signupBuild").forEach((input) => {
+document.querySelectorAll("#signupName, #signupEmail, #signupAge, #signupDob, #signupPosition, #signupCity, #signupState, #signupZip, #signupBuild, #signupKyc").forEach((input) => {
   input.addEventListener("input", updateLoginGate);
   input.addEventListener("change", updateLoginGate);
+});
+
+document.querySelector("#verifyLocationButton")?.addEventListener("click", () => {
+  const registration = getRegistration();
+  registrationLocationVerification = {
+    ...registrationLocationVerification,
+    statedCity: registration.city,
+    statedState: registration.state,
+    statedZip: registration.zip,
+    currentState: registration.state,
+    currentCountry: "US",
+    currentLatitude: 35.2271,
+    currentLongitude: -80.8431,
+    ipState: registration.state,
+    ipCountry: "US",
+    locationPermissionGranted: true,
+    locationVerifiedAt: new Date().toISOString(),
+    locationMismatch: false,
+    vpnOrProxyDetected: false,
+  };
+  writeStore("mcpaRegistrationLocation", registrationLocationVerification);
+  renderRegistrationEligibility();
+  updateLoginGate();
+  showToast("Location verified. Exact coordinates stay hidden from players.");
+});
+
+document.querySelector("#startAppealButton")?.addEventListener("click", () => {
+  supportTickets.unshift({
+    id: `MCPA-${1043 + supportTickets.length}`,
+    type: "Eligibility appeal",
+    subject: "Payout eligibility appeal",
+    status: "Open",
+    owner: document.querySelector("#signupName").value.trim() || "Player",
+    detail: `${registrationLocationVerification.eligibilityStatus}: ${registrationLocationVerification.eligibilityReason}`,
+  });
+  renderSupportTickets();
+  showToast("Eligibility appeal opened for staff review.");
 });
 
 enterAppButton.addEventListener("click", unlockApp);
@@ -2668,6 +4449,23 @@ document.querySelector("#shuffleSeeds").addEventListener("click", () => {
   renderBracket();
   showToast("Bracket auto-seeded from standings and payment status.");
 });
+
+document.querySelector("#cupAutoResult")?.addEventListener("click", () => {
+  const nextGame = cupState.games.find((game) => game.status !== "FINAL") || cupState.games[0];
+  submitCupGameResult(nextGame.id, nextGame.homeTeamId, { [nextGame.homeTeamId]: 84, [nextGame.awayTeamId]: 76 });
+  renderCup();
+  renderLeagueBracketBoard();
+  showToast("League Cup group result submitted and standings updated.");
+});
+
+document.querySelector("#generateCupKnockout")?.addEventListener("click", () => {
+  generateCupKnockoutBracket();
+  renderCup();
+  renderLeagueBracketBoard();
+  showToast("Midseason Cup knockout bracket generated from group winners and wild card.");
+});
+
+document.querySelector("#submitMmrResult")?.addEventListener("click", submitMmrResultFromForm);
 
 document.querySelector("#publishSchedule").addEventListener("click", () => {
   showToast("Scheduled games published to teams, owners, and eligible players.");
@@ -2795,20 +4593,20 @@ document.querySelector("#refreshTickets").addEventListener("click", () => {
 
 document.querySelector("#startDraft").addEventListener("click", startDraft);
 document.querySelector("#makeDraftPick").addEventListener("click", makeDraftPick);
-document.querySelector("#pauseDraft").addEventListener("click", pauseDraft);
 document.querySelector("#resetDraft").addEventListener("click", resetDraft);
 
-document.querySelector("#startRoomShortcut").addEventListener("click", () => {
-  document.querySelector("#voiceCreateForm").scrollIntoView({ behavior: "smooth", block: "center" });
-  window.setTimeout(() => document.querySelector("#voiceRoomName").focus(), 220);
-  showToast("Name a voice chat and create it for players to join.");
+document.querySelectorAll("[data-chat-mode]").forEach((button) => {
+  button.addEventListener("click", () => setChatMode(button.dataset.chatMode));
 });
 
 document.querySelector("#voiceCreateForm").addEventListener("submit", createVoiceRoom);
 document.querySelector("#joinVoiceRoom").addEventListener("click", joinVoiceRoom);
 document.querySelector("#leaveVoiceRoom").addEventListener("click", leaveVoiceRoom);
 document.querySelector("#toggleMic").addEventListener("click", toggleMic);
-document.querySelector("#toggleSpeaker").addEventListener("click", toggleSpeaker);
+document.querySelector("#toggleVoiceOutput").addEventListener("click", toggleVoiceOutput);
+document.querySelector("#toggleDeafen").addEventListener("click", toggleDeafen);
+document.querySelector("#miniToggleMic").addEventListener("click", toggleMic);
+document.querySelector("#miniToggleDeafen").addEventListener("click", toggleDeafen);
 
 document.querySelector("#dmComposer").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -2845,7 +4643,10 @@ document.querySelector("#statImage").addEventListener("change", (event) => {
 });
 
 document.querySelector("#applyStats").addEventListener("click", () => {
-  showToast("Stats applied. Player averages and team records were updated.");
+  updateRecordBooksFromResult();
+  renderHistoryBooks();
+  renderPlayers();
+  showToast("Stats applied. Player averages, records, and profile accolades were updated.");
 });
 
 function previewImage(input, callback) {
@@ -2887,6 +4688,47 @@ document.querySelector("#grantStaffRole").addEventListener("click", () => {
 document.querySelector("#runIdentityScan").addEventListener("click", () => {
   renderIdentityQueue();
   showToast("Xbox and PSN identity scan complete. Risk queue refreshed.");
+});
+
+document.querySelector("#saveJurisdictionRule")?.addEventListener("click", () => {
+  const state = document.querySelector("#jurisdictionStateInput").value;
+  const status = document.querySelector("#jurisdictionRuleInput").value;
+  const reason = document.querySelector("#jurisdictionReasonInput").value.trim();
+  updateJurisdictionRule(
+    state,
+    {
+      status,
+      payoutEligibility: status === "FREE_PLAY_ONLY" ? "RESTRICTED" : status,
+      cashCompetitionEligibility: status === "FREE_PLAY_ONLY" ? "RESTRICTED" : status,
+      freePlayAllowed: status !== "RESTRICTED",
+      reason,
+      requiresManualReview: status === "REVIEW_REQUIRED",
+    },
+    currentUserName(),
+  );
+  renderJurisdictionRulesPanel();
+  renderRegistrationEligibility();
+  showToast(`${normalizeState(state)} jurisdiction rule saved.`);
+});
+
+document.querySelector("#removeJurisdictionRule")?.addEventListener("click", () => {
+  const state = normalizeState(document.querySelector("#jurisdictionStateInput").value);
+  updateJurisdictionRule(state, { status: "ELIGIBLE", reason: "Removed from restricted list.", freePlayAllowed: true }, currentUserName());
+  renderJurisdictionRulesPanel();
+  renderRegistrationEligibility();
+  showToast(`${state} removed from the restricted jurisdiction list.`);
+});
+
+document.querySelector("#saveEligibilityOverride")?.addEventListener("click", () => {
+  const playerId = document.querySelector("#eligibilityOverridePlayer").value.trim();
+  const finalStatus = document.querySelector("#eligibilityOverrideStatus").value;
+  const reason = document.querySelector("#eligibilityOverrideReason").value.trim();
+  const saved = adminOverrideEligibility(playerId, finalStatus, reason, currentUserName());
+  if (saved) {
+    document.querySelector("#eligibilityOverrideReason").value = "";
+    renderJurisdictionRulesPanel();
+    showToast(`Eligibility override saved for ${playerId}.`);
+  }
 });
 
 document.querySelectorAll("[data-pay-choice]").forEach((button) => {
@@ -2985,24 +4827,28 @@ document.querySelectorAll("[data-history-filter]").forEach((button) => {
   });
 });
 
-document.querySelector("#composer").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const input = document.querySelector("#chatInput");
-  const message = input.value.trim();
-  if (!message) return;
-
-  const chatWindow = document.querySelector("#chatWindow");
-  const bubble = document.createElement("article");
-  bubble.className = "message mine";
-  bubble.innerHTML = `<span>${escapeHtml(currentUserName())}</span><p>${formatMessageText(message)}</p>`;
-  chatWindow.append(bubble);
-  input.value = "";
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+document.querySelector("#composer").addEventListener("submit", sendMessage);
+document.querySelector("#chatInput").addEventListener("input", handleTyping);
+document.querySelector("#chatInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    sendMessage(event);
+  }
+});
+document.querySelector("#chatAttachButton").addEventListener("click", () => {
+  showToast("Attachments will connect to screenshot and media uploads in production.");
+});
+document.querySelector("#voiceRoomCount").addEventListener("click", () => {
+  const picker = document.querySelector("#chatRoomPicker");
+  const button = document.querySelector("#voiceRoomCount");
+  picker.hidden = !picker.hidden;
+  button.setAttribute("aria-expanded", String(!picker.hidden));
 });
 
 setupMentionInput("#dmInput", "#dmMentionTray");
 setupMentionInput("#chatInput", "#leagueMentionTray");
 
+applyPreviewSessionFromUrl();
 renderPlayers();
 renderStatLeaders();
 renderTeamDirectory();
@@ -3011,12 +4857,14 @@ renderBracket();
 renderTeamStandings();
 renderScheduledGames();
 renderLeagueLockedGames();
+renderEventCalendar();
 renderScoreResults();
 renderLeagueRules();
 renderLiveStreams();
 renderDirectMessages();
 renderVoiceRooms();
 renderVoiceStage();
+renderVoiceMiniBar();
 renderIdentityQueue();
 renderSupportTickets();
 renderDraftRoom();
@@ -3024,8 +4872,31 @@ renderAwardCatalog();
 renderPolls("#awardPolls", awardPolls);
 renderPolls("#allStarPolls", allStarPolls);
 renderHistory();
+renderMovementDashboard();
+renderJurisdictionRulesPanel();
+renderFreeAgency();
+renderWaivers();
+renderMmrRankings();
+renderMatchResultForm();
+renderCup();
+renderLeagueBracketBoard();
+renderHistoryBooks();
+renderChatRooms();
+renderMessages();
 updateLoginGate();
 updateConnectionCards();
+setChatMode(chatMode);
+window.setTimeout(scrollToBottom, 100);
+
+window.setInterval(() => {
+  cleanupVoiceRooms(true);
+  renderVoiceRooms();
+  renderVoiceStage();
+  renderVoiceMiniBar();
+  hideTypingIndicator();
+}, 60000);
+
+demoTypingTimer = window.setInterval(simulateDemoTyping, 14000);
 
 if ("serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("./service-worker.js").catch(() => {});
