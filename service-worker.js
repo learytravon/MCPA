@@ -1,4 +1,4 @@
-const CACHE_NAME = "mcpa-prototype-v18";
+const CACHE_NAME = "mcpa-prototype-v25";
 const APP_SHELL = [
   "./",
   "./index.html",
